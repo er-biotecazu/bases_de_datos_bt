@@ -63,9 +63,9 @@ def Menu_principal():
     print("    [6]    Borrado de entradas")
     print("    [7]    Inserción de entradas")
     print("    [8]    Modificación de entradas")
-    print("    [9]    Cerrar el programa\n")
+    print("    [X]    Cerrar el programa\n")
     Opcion_menor=1
-    Opcion_mayor=9
+    Opcion_mayor=8
     Ir_a=Seleccion(Opcion_mayor, Opcion_menor)
     return Ir_a
 
@@ -253,6 +253,7 @@ def Primeros_resultados_enfermedades ():
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
         Numero_inicial+=1
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+    Obtener_archivo_texto(1, Datos, "pruebina_jeje.txt")
     return 
 
 ## Subapartado 1.7: Mostrar las primeras diez instancias de fenotipos
@@ -313,13 +314,35 @@ def Comprobar_farmaco_nombre():
     Consulta_SQL = "SELECT drug_name FROM drug WHERE drug_name = %s"
     Cursor.execute(Consulta_SQL, (Farmaco,))
     Datos=Cursor.fetchall()
-    if len(Datos) == 0:
-        print(f"Lo sentimos, este fármaco no está dentro de la base. Vuelva a intentarlo de nuevo.")
-    else: 
+    if len(Datos) != 0:
         Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s"
         Cursor.execute(Consulta2_SQL, (Farmaco,))
         Datos = Cursor.fetchone()
         Farmaco = Datos[0]
+    elif len(Farmaco) >= 3: 
+        Consulta3_SQL = "SELECT drug_name FROM drug WHERE drug_name LIKE %s"
+        Farmaco = f"%{Farmaco}%"
+        Cursor.execute(Consulta3_SQL, (Farmaco,))
+        Datos=Cursor.fetchall()
+        if len(Datos) != 0:
+            print("\nLo sentimos, no hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?: \n")
+            Numero_inicial = 1
+            for Fila in Datos:
+                print(f"{Numero_inicial}: {Fila[0]}")
+                Numero_inicial+=1
+            Respuesta_usuario=input(f"\n¿Se encuentra su fármaco de interés en la lista? [sí|no]: ")
+            if re.search("[Ss][IiÍí]", Respuesta_usuario): 
+                Respuesta2_usario=input("\nPor favor, seleccione el número de su fármaco de interés: ")
+                Farmaco=Datos[int(Respuesta2_usario)-1][0]
+                print(f"Su elección ha sido: {Farmaco}.")
+                Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s"
+                Cursor.execute(Consulta2_SQL, (Farmaco,))
+                Datos = Cursor.fetchone()
+                Farmaco = Datos[0]
+        else:
+            print(f"Lo sentimos, este fármaco no está dentro de la base. Vuelva a intentarlo de nuevo.")
+    else:
+            print(f"Lo sentimos, este fármaco no está dentro de la base. Vuelva a intentarlo de nuevo.")
     return Farmaco
 
 def Comprobar_codigo_farmaco(ID_Farmaco): 
@@ -333,6 +356,18 @@ def Comprobar_codigo_farmaco(ID_Farmaco):
         Codigo_farmaco="fail"
         print(f"\nLo sentimos, el código introducido ya está asociado a este fármaco.")
     return Codigo_farmaco
+
+def Obtener_archivo_texto(Numero_campos, Datos, Nombre_archivo): 
+    Respuesta_usuario=input("¿Quiere generar un archivo de texto con los resultados de la consulta que se guardará en su directorio de trabajo? [sí|no]: ")
+    if re.search("[Ss][IiÍí]", Respuesta_usuario):
+        Archivo_salida=open(Nombre_archivo, "a")
+        for Fila in Datos:
+            Texto_salida = ""
+            for Numero in range(0,Numero_campos): 
+                Texto_salida = Texto_salida + Fila[Numero]   
+        Archivo_salida.write(Texto_salida)
+        Archivo_salida.close()
+    return 
 
 # Apartado 2: Información de los fármacos
 ## Subapartado 2.1: Información sobre un fármaco
@@ -580,12 +615,16 @@ def Coger_primeras_dianas():
     """
     Cursor.execute(Consulta_SQL, (Respuesta_usuario,))
     Datos=Cursor.fetchall()
-    print("\n*******************************************************************************************")
-    print("\nIdentificador\tDiana\n")
-    Numero_inicial=1
-    for Fila in Datos: 
-        print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
-    print("*******************************************************************************************\n")
+    if len(Datos) != 0: 
+        print("\n*******************************************************************************************")
+        print("\nNúmero\tIdentificador\tDiana\n")
+        Numero_inicial=1
+        for Fila in Datos: 
+            print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
+            Numero_inicial+=1
+        print("*******************************************************************************************\n")
+    else: 
+        print("\nNo se ha encontrado ningún fármaco para la diana proporcionada.")
     return 
 
 ## Subapartado 5.2: Organismo al que se asocian un mayor número de dianas
@@ -601,7 +640,7 @@ def Coger_organismo_mas_dianas():
     Datos=Cursor.fetchone()
     print("\n*******************************************************************************************")
     print(f"El organismo con más dianas es: {Datos[0]} (identificador: {Datos[1]}), con un total de {Datos[2]} dianas.")
-    Respuesta_usuario=input("¿Quiere consultar el total de las dianas para el organismo seleccionado? [sí|no]")
+    Respuesta_usuario=input("\n¿Quiere consultar el total de las dianas para el organismo seleccionado? [sí|no]: ")
     if re.search("[Ss][IiÍí]", Respuesta_usuario):    
         Sentencia2="SELECT target_id, target_name_pref FROM target WHERE organism_id = %s"
         Cursor.execute(Sentencia2, (Datos[1],))
@@ -639,6 +678,10 @@ def Obtener_tipos_diana():
 
 #Apartado 6: Borrado
 def Borrado():
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("Por medio de esta funcionalidad, se le van a mostrar las diez asociaciones entre fármaco y enfermedad con un score inferido más bajo.")
+    print("Usted dispone de la oportunidad de borrar alguna de esas asociaciones.")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     sql_query = """ 
     SELECT dd.inferred_score, d.drug_name, dc.name FROM drug_disease AS dd, drug AS d, disease_code AS dc
     WHERE d.drug_id = dd.drug_id AND dc.code_id = dd.code_id AND inferred_score IS NOT NULL
@@ -647,8 +690,7 @@ def Borrado():
     """
     Cursor.execute(sql_query)
     Datos=Cursor.fetchall()
-    print("\nSe le van a mostrar las diez asociaciones entre fármaco y enfermedad con un score inferido más bajo. Usted dispone de la oportunidad de borrar alguna de esas asociaciones.")
-    print("\n   Score inferido\tNombre del fármaco\tNombre de la enfermedad")
+    print("\nNúmero\tScore inferido\tNombre del fármaco\tNombre de la enfermedad")
     Numero_inicial=1
     for Fila in Datos: 
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}\t{Fila[2]}")
@@ -663,33 +705,42 @@ def Borrado():
         #Nótese que para buscar el fármaco que tiene el valor de inferred_score seleccionado para su borrado, utilizamos la función 'LIKE'. Esto se debe a que los valores de esta columna 
         #son de tipo 'float'. El sistema, internamente, representa los valores con mayor precisión añadiendo un número mayor de decimales que los que se devuelven en la consulta, por lo 
         #que no se puede utilizar un igual en este caso. 
-        if  re.search("[Ss][IiÍí]", Respuesta_usuario):
+        if  re.search("[Ss][IiÍí]", Respuesta_usuario3):
             Borrado_SQL = """DELETE FROM drug_disease 
                         WHERE inferred_score LIKE %s AND drug_id = (SELECT drug_id FROM drug WHERE drug_name = %s) AND code_id = (SELECT code_id FROM disease_code WHERE name = %s)
                         """
             try: 
                 Cursor.execute(Borrado_SQL, (Seleccion_usuario[0], Seleccion_usuario[1], Seleccion_usuario[2],))
-                print("\nEl borrado se ha realizado con éxito")
+                print("\nEl borrado se ha realizado con éxito.")
             except mysql.connector.Error:
-                print("Lo sentimos, no ha podido ejecutarse este borrado.")
+                print("\nLo sentimos, no ha podido ejecutarse este borrado.")
     return 
 
 #Apartado 7: Inserciones 
 def Inserciones():
-    print("\nPor medio de esta funcionalidad, usted puede ampliar las codificaciones de un fármaco ya existente en la base de datos.")
-    print("Usted debe introducir el nombre del fármaco, el nuevo código y el vocabulario del que proviene.") 
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("Por medio de esta funcionalidad, usted puede ampliar las codificaciones de un fármaco ya existente en la base de datos.")
+    print("Usted debe introducir el nombre del fármaco, el nuevo código y el vocabulario del que proviene.")
+    print("El código introducido no puede estar ya asociado a ese fármaco.") 
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     ID_farmaco=Comprobar_farmaco_nombre()
     if re.search(r"^(CHEMBL)[0123456789]{1,}$", ID_farmaco):
         Codigo_farmaco=Comprobar_codigo_farmaco(ID_farmaco)
         if Codigo_farmaco != "fail":
             Vocabulario_farmaco=input("Por favor, introduzca el nombre del vocabulario para el que pertenece el código: ")
             Insercion_SQL="INSERT INTO drug_has_code(drug_id, code_id, vocabulary) VALUES (%s, %s, %s)" 
-            Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
+            try: 
+                Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
+                print("\nLa inserción se ha realizaco con éxito.")
+            except mysql.connector.Error:
+                print("\nLo sentimos, no ha podido ejecutarse esta inserción")
     return
 
 #Apartado 8. Modificaciones 
 def Modificaciones(): 
-    print("\nPor medio de esta funcionalidad, usted puede considerar despreciables aquellas asociaciones entre fármacos y efectos secundarios cuyo valor de asociación sea menor a cierto valor")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("Por medio de esta funcionalidad, usted puede considerar despreciables aquellas asociaciones entre fármacos y efectos secundarios\ncuyo valor de asociación sea menor a cierto valor")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     Respuesta_usuario=input("Por favor, indique el valor umbral de asociación entre fármaco y efecto secundario: ")
     try: 
         Respuesta_usuario=float(Respuesta_usuario)
@@ -698,11 +749,13 @@ def Modificaciones():
         Cursor.execute(Consulta_SQL, (Respuesta_usuario,))
         Datos=Cursor.fetchall()
         if len(Datos) != 0: 
-            Modificacion_SQL="""UPDATE drug_phenotype_effect 
+            Respuesta2_usuario=input(f"\nSe ha encontrado un total de {len(Datos)} de asociaciones con un valor menor al especificado.\n¿Está seguro que quiere hacer la modificación? [sí|no]: ")
+            if re.search("[Ss][IiÍí]", Respuesta2_usuario):
+                Modificacion_SQL="""UPDATE drug_phenotype_effect 
                                 SET score = 0 
                                 WHERE phenotype_type = "SIDE EFFECT" AND score < %s;"""
-            Cursor.execute(Modificacion_SQL, (Respuesta_usuario,))
-            print("\n     ★  El cambio se ha realizado satisfactoriamente.  ★\n")
+                Cursor.execute(Modificacion_SQL, (Respuesta_usuario,))
+                print("\nLa modificación se ha realizado con éxito.")
         else: 
             print("\nNo hay asocaciones fármaco-efecto secundario con un score menor al introducido.")
     except ValueError:
@@ -918,9 +971,9 @@ def Opciones(Ir_a):
             Mensaje_despedida()
         else:
             Funcionalidades_8(Ir_a)
-            
+
     #Si es 9, salimos del programa (gracias a "return").
-    elif Ir_a==9:
+    elif Ir_a=="x" or Ir_a=="X":
        Mensaje_despedida()
     return 
 
