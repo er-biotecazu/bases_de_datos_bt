@@ -227,7 +227,7 @@ def Primeros_resultados_farmacos ():
     Cursor.execute(Instancias_farmacos)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("Nº\tIdentificador\tNombre\t\tTipo molecular\tEstructura química\tClave InChy\n")
+    print("N.º\tIdentificador\tNombre\t\tTipo molecular\tEstructura química\tClave InChy\n")
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}\t{Fila[2]}\t{Fila[3]}\t{Fila[4]}")
@@ -247,7 +247,7 @@ def Primeros_resultados_enfermedades ():
     Cursor.execute(Instancias_enfermedades)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("Nº\tIdentificador\tNombre\n")
+    print("N.º\tIdentificador\tNombre\n")
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -266,7 +266,7 @@ def Primeros_resultados_fenotipos():
     Cursor.execute(Instancias_fenotipos)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("Nº\tIdentificador\tNombre\n")
+    print("N.º\tIdentificador\tNombre\n")
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -289,7 +289,7 @@ def Primeros_resultados_dianas():
     Cursor.execute(Instancias_dianas)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("Nº\tIdentificador\tNombre\t\t\tTipo\t\t\tOrganismo\n")
+    print("N.º\tIdentificador\tNombre\t\t\tTipo\t\t\tOrganismo\n")
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}\t{Fila[2]}\t{Fila[3]}")
@@ -449,9 +449,11 @@ def Farmaco_trata_enfermedades():
         Enfermedades_tratables=Cursor.fetchall()
         print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
         if len(Enfermedades_tratables)!=0:
-            print("Nº\tIdentificador\tNombre\n")
-            for i in range(len(Enfermedades_tratables)):
-                print(str(i+1)+"\t"+Enfermedades_tratables[i][0]+"\t"+Enfermedades_tratables[i][1])    
+            print("N.º\tIdentificador\tNombre\n")
+            Numero_inicial=1
+            for Enfermedad in Enfermedades_tratables:
+                print(f"{Numero_inicial}\t{Enfermedad[0]}\t{Enfermedad[1]}")
+                Numero_inicial+=1
         else:
             print("Esta enfermedad no cuenta con fármacos contra ella introducidos en la base de datos.")
         print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
@@ -500,7 +502,7 @@ def Coger_farmacos_para_enfermedad():
         Datos=Cursor.fetchall()
         print("\n##############################################################################################")
         if len(Datos) != 0:
-            print("Nº\tIdentificador\tNombre\n")
+            print("N.º\tIdentificador\tNombre\n")
             Numero_inicial=1
             for Fila in Datos:
                 print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -538,8 +540,8 @@ def Buscar_termino_clave():
     Enfermedades=Cursor.fetchall()
     print("\n##############################################################################################################")
     if len(Enfermedades)!=0:
-        for i in range(len(Enfermedades)):
-            print("  - "+Enfermedades[i][1]+" ("+Enfermedades[i][0]+")")
+        for Enfermedad in Enfermedades:
+            print(f"  -  {Enfermedad[1]} ({Enfermedad[0]})")
     else:
         print("Lo sentimos, no se ha encontrado ninguna enfermedad que incluya ese término.")
     print("##############################################################################################################\n")
@@ -556,7 +558,7 @@ def Coger_indicaciones_fenotipo(Farmaco):
         Cursor.execute(Consulta_SQL, (Farmaco,))
         Datos=Cursor.fetchall()
         if len(Datos) != 0: 
-            print("Nº\tID del fenotipo\tIndicado para\n")
+            print("N.º\tID del fenotipo\tIndicado para\n")
             Numero_inicial=1
             for Fila in Datos: 
                 print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -600,9 +602,11 @@ def Farmacos_provocan_efecto_secundario():
     Farmacos=Cursor.fetchall()
     print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
     if len(Farmacos)!=0:
-        print("Nº\tIdentificador\tFármaco")
-        for i in range(len(Farmacos)):
-            print(str(i+1)+"\t"+Farmacos[i][0]+"\t"+Farmacos[i][1])
+        print("N.º\tIdentificador\tFármaco")
+        Numero_inicial=1
+        for Farmaco in Farmacos:
+            print(f"{Numero_inicial}\t{Farmaco[0]}\t{Farmaco[1]}")
+            Numero_inicial+=1
     else:
         print("Este efecto fenotípico no está incluido en la base de datos.")
     print("♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣\n")
@@ -621,7 +625,7 @@ def Coger_primeras_dianas():
     Datos=Cursor.fetchall()
     if len(Datos) != 0: 
         print("\n*******************************************************************************************")
-        print("\nNúmero\tIdentificador\tDiana\n")
+        print("\nN.º\tIdentificador\tDiana\n")
         Numero_inicial=1
         for Fila in Datos: 
             print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -648,9 +652,11 @@ def Coger_organismo_mas_dianas():
     if re.search("[Ss][IiÍí]", Respuesta_usuario):    
         Sentencia2="SELECT target_id, target_name_pref FROM target WHERE organism_id = %s"
         Cursor.execute(Sentencia2, (Datos[1],))
-        Dianas_mas=Cursor.fetchall()
-        for i in range(len(Dianas_mas)):
-            print("  · "+str(i+1)+": "+Dianas_mas[i][1]+" ("+Dianas_mas[i][0]+")")
+        Dianas=Cursor.fetchall()
+        Numero_inicial=1
+        for Diana in Dianas:
+            print(f"  ·  {Numero_inicial}: {Diana[1]} ({Diana[0]})")
+            Numero_inicial+=1
     print("****************************************************************************\n")
     return 
 
@@ -659,12 +665,14 @@ def Dianas_organismo_concreto():
     Organismo=input("Por favor, indique el nombre de su organismo de interés (por ejemplo: Homo sapiens): ")
     Sentencia="SELECT target_id, target_name_pref FROM target WHERE organism_id=(SELECT taxonomy_id FROM organism WHERE taxonomy_name = %s)"
     Cursor.execute(Sentencia, (Organismo,))
-    Dianas_elegido=Cursor.fetchall()
+    Dianas=Cursor.fetchall()
     print("\n*******************************************************************************************")
-    if len(Dianas_elegido)!=0:
-        print("Nº\tIdentificador\tDiana")
-        for i in range(len(Dianas_elegido)):
-            print(str(i+1)+"\t"+Dianas_elegido[i][0]+"\t"+Dianas_elegido[i][1])
+    if len(Dianas)!=0:
+        print("N.º\tIdentificador\tDiana")
+        Numero_inicial=1
+        for Diana in Dianas:
+            print(f"{Numero_inicial}\t{Diana[0]}\t{Diana[1]}")
+            Numero_inicial+=1
     else:
         print("Este organismo no tiene dianas incluidas en la base de datos.")
     print("****************************************************************************\n")
@@ -694,7 +702,7 @@ def Borrado():
     """
     Cursor.execute(sql_query)
     Datos=Cursor.fetchall()
-    print("\nNúmero\tScore inferido\tNombre del fármaco\tNombre de la enfermedad")
+    print("\nN.º\tScore inferido\tNombre del fármaco\tNombre de la enfermedad")
     Numero_inicial=1
     for Fila in Datos: 
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}\t{Fila[2]}")
