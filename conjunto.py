@@ -378,12 +378,16 @@ def Coger_informacion_farmaco_especifico(Farmaco):
     try:
         Cursor.execute(Consulta_SQL, (Farmaco,))
         Datos=Cursor.fetchone()
-        print("Nombre\tTipo molecular\tEstructura química\tClave InChi\n")
-        print(f"{Datos[0]}\t{Datos[1]}\t{Datos[2]}\t{Datos[3]}")
+        if len(Datos) != 0:
+            print("Nombre\tTipo molecular\tEstructura química\tClave InChi\n")
+            print(f"{Datos[0]}\t{Datos[1]}\t{Datos[2]}\t{Datos[3]}")
+        else:
+            print("Este fármaco no está incluido en la base de datos.")
     except TypeError:
         print("Este fármaco no está incluido en la base de datos.")
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     return 
+
 
 ## Subapartado 2.2: Sinónimos de un fármaco 
 def Coger_sinonimos_farmaco_especifico():
@@ -463,7 +467,7 @@ def Obtener_identificadores_farmaco():
         Codigo_CHEMBL=Cursor.fetchall()
         print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
         if len(Codigo_CHEMBL)!=0:
-            print(f"\n\t\t\t{Codigo_CHEMBL[0][0]}:  {Codigo_CHEMBL[0][1]}")
+            print(f"\t\t\t{Codigo_CHEMBL[0][0]}:  {Codigo_CHEMBL[0][1]}")
         elif len(Farmaco) >= 3:
             Sentencia_laxa = "SELECT drug_name, drug_id FROM drug WHERE drug_name LIKE %s"
             Farmaco = f"%{Farmaco}%"
@@ -479,7 +483,7 @@ def Obtener_identificadores_farmaco():
                 print("\n    |    Esta enfermedad no cuenta con fármacos contra ella introducidos en la base de datos.    |    ")
         else:
             print("\n    |    Esta enfermedad no cuenta con fármacos contra ella introducidos en la base de datos.    |    ")
-        print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
+        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     except TypeError:
         print("· Esta enfermedad no cuenta con fármacos contra ella introducidos en la base de datos.")
 
@@ -522,7 +526,7 @@ def Mayor_asociacion():
     Cursor.execute(Sentencia)
     Resultado=Cursor.fetchone()   
     print("\n##############################################################################################################")
-    print("La mayor asociación la presentan la enfermedad \""+str(Resultado[0][1])+"\" y el fármaco \""+str(Resultado[0][0])+"\" (la puntuación es de "+str(Resultado[0][2])+").")
+    print(f"La mayor asociación la presentan la enfermedad '{Resultado[1]}' y el fármaco '{Resultado[0]}' (la puntuación es de {Resultado[2]}).")
     print("##############################################################################################################\n")
 
 ## Subapartado 3.3: Buscar enfermedades asociadas a un término clave.
@@ -552,7 +556,7 @@ def Coger_indicaciones_fenotipo(Farmaco):
         Cursor.execute(Consulta_SQL, (Farmaco,))
         Datos=Cursor.fetchall()
         if len(Datos) != 0: 
-            print("\nNº\tID del fenotipo\tEfecto fenotípico\n")
+            print("Nº\tID del fenotipo\tIndicado para\n")
             Numero_inicial=1
             for Fila in Datos: 
                 print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -815,12 +819,10 @@ def Funcionalidades_4(Ir_a):
     if Ir_a==1:
         Farmaco=Buscar_farmaco()
         Cursor.execute("SELECT * FROM  drug WHERE drug_id = %s", (Farmaco,))
-        print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
         if len(Cursor.fetchall())!=0:
             Coger_indicaciones_fenotipo(Farmaco)
         else:
             print("Este fármaco no está incluido en la base de datos.")
-        print("♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣\n")
     elif Ir_a==2:
         Farmaco=Buscar_farmaco()
         Cursor.execute("SELECT * FROM drug WHERE drug_id = %s", (Farmaco,))
@@ -828,7 +830,6 @@ def Funcionalidades_4(Ir_a):
             Coger_efectos_secundarios_fenotipo(Farmaco)
         else:
             print("Este fármaco no está incluido en la base de datos.")
-        print("♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣\n")
     elif Ir_a==3:
         Farmacos_provocan_efecto_secundario()
     Ir_a=4
