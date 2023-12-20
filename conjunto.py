@@ -227,12 +227,14 @@ def Primeros_resultados_farmacos ():
     Cursor.execute(Instancias_farmacos)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("N.º\tIdentificador\tNombre\t\tTipo molecular\tEstructura química\tClave InChy\n")
+    Encabezado="N.º\tIdentificador\tNombre\t\tTipo molecular\tEstructura química\tClave InChy\n"
+    print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}\t{Fila[2]}\t{Fila[3]}\t{Fila[4]}")
         Numero_inicial+=1
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+    Obtener_archivo_texto(5, Encabezado, Datos, "Consulta_1.5.txt")
     return 
 
 ## Subapartado 1.6: Mostrar las primeras diez instancias de enfermedades
@@ -247,13 +249,13 @@ def Primeros_resultados_enfermedades ():
     Cursor.execute(Instancias_enfermedades)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("N.º\tIdentificador\tNombre\n")
+    Encabezado="N.º\tIdentificador\tNombre\n"
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
         Numero_inicial+=1
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-    Obtener_archivo_texto(1, Datos, "pruebina_jeje.txt")
+    Obtener_archivo_texto(2, Encabezado, Datos, "Consulta_1.6.txt")
     return 
 
 ## Subapartado 1.7: Mostrar las primeras diez instancias de fenotipos
@@ -266,12 +268,13 @@ def Primeros_resultados_fenotipos():
     Cursor.execute(Instancias_fenotipos)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("N.º\tIdentificador\tNombre\n")
+    Encabezado="N.º\tIdentificador\tNombre\n"
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
         Numero_inicial+=1
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+    Obtener_archivo_texto(2, Encabezado, Datos, "Consulta_1.7.txt")
     return 
 
 ## Subapartado 1.8: Mostrar las primeras diez instancias de dianas 
@@ -283,18 +286,19 @@ def Primeros_resultados_dianas():
                o.taxonomy_name 
         FROM target AS t, organism AS o
         WHERE t.organism_id=o.taxonomy_id AND t.target_id IS NOT NULL AND t.target_name_pref IS NOT NULL AND t.target_type IS NOT NULL AND o.taxonomy_name IS NOT NULL
-        GROUP BY t.target_id
         LIMIT 10;
         """
     Cursor.execute(Instancias_dianas)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print("N.º\tIdentificador\tNombre\t\t\tTipo\t\t\tOrganismo\n")
+    Encabezado="N.º\tIdentificador\tNombre\t\t\tTipo\t\t\tOrganismo\n"
+    print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}\t{Fila[2]}\t{Fila[3]}")
         Numero_inicial+=1
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+    Obtener_archivo_texto(4, Encabezado, Datos, "Consulta_1.8.txt")
     return 
 
 def Buscar_farmaco():
@@ -357,15 +361,30 @@ def Comprobar_codigo_farmaco(ID_Farmaco):
         print(f"\nLo sentimos, el código introducido ya está asociado a este fármaco.")
     return Codigo_farmaco
 
-def Obtener_archivo_texto(Numero_campos, Datos, Nombre_archivo): 
+#Esta función se define para que el usuario tenga la opción de generar un archivo de texto con los resultados de la consulta. Viene definido por una serie de argumentos: 
+    #Numero_campos se refiere al conjunto de elementos de cada tupla resultante de la consulta que se presentan en la salida. 
+    #Encabezado contiene el encabezado de los distintos atributos para una determinada consulta. 
+    #Datos contiene el resultado de las tuplas de la consulta tal y como se almacenan en una variable con fetchall o fetchone. 
+    #Consulta contiene la consulta introducida por el usuario (input)
+    #Nombre_archivo será el nombre que le demos al archivo de texto. 
+def Obtener_archivo_texto(Numero_campos, Encabezado, Datos, Nombre_archivo): 
     Respuesta_usuario=input("¿Quiere generar un archivo de texto con los resultados de la consulta que se guardará en su directorio de trabajo? [sí|no]: ")
     if re.search("[Ss][IiÍí]", Respuesta_usuario):
-        Archivo_salida=open(Nombre_archivo, "a")
+        Archivo_salida=open(Nombre_archivo, "w")
+        #Archivo_salida.write(f"El usuario introdujo como dato a su consulta '{Consulta}'.")
+        Tuplas_consulta=[]
+        Tuplas_consulta.append(Encabezado)
+        Numero_orden = 1
         for Fila in Datos:
             Texto_salida = ""
-            for Numero in range(0,Numero_campos): 
-                Texto_salida = Texto_salida + Fila[Numero]   
-        Archivo_salida.write(Texto_salida)
+            for Numero in range(0,(Numero_campos)): 
+                if Numero == (Numero_campos-1):
+                     Texto_salida = Texto_salida + str(Numero_orden) + "\t" + Fila[Numero]  + "\n"
+                else: 
+                    Texto_salida = Texto_salida + str(Numero_orden) + "\t" + Fila[Numero] 
+            Tuplas_consulta.append(Texto_salida)
+            Numero_orden+=1
+        Archivo_salida.writelines(Tuplas_consulta)
         Archivo_salida.close()
     return 
 
@@ -393,8 +412,8 @@ def Coger_informacion_farmaco_especifico(Farmaco):
 def Coger_sinonimos_farmaco_especifico():
     Respuesta_usuario=input("\nPor favor, indique el nombre del fármaco del cual quiere obtener sus sinónimos (ejemplo: ASPIRIN): ")
     Consulta_SQL = """
-            SELECT s.synonymous_name FROM drug AS d, synonymous AS s
-            WHERE d.drug_id IN (SELECT drug_id FROM drug WHERE drug_name = %s) and d.drug_id = s.drug_id; """
+            SELECT synonymous_name FROM synonymous 
+            WHERE d.drug_id IN (SELECT drug_id FROM drug WHERE drug_name = %s); """
     #Obsérvese que para la subconsulta utilizamos un IN en lugar de un = porque en algunos casos, para un mismo nombre de fármaco, devuelve distintos drug_id (y daría un error)
     try:
         Cursor.execute(Consulta_SQL, (Respuesta_usuario, ))
@@ -553,7 +572,6 @@ def Coger_indicaciones_fenotipo(Farmaco):
     SELECT pe.phenotype_id, pe.phenotype_name FROM drug_phenotype_effect AS dpe, phenotype_effect AS pe
     WHERE dpe.drug_id = %s AND dpe.phenotype_type="INDICATION" AND pe.phenotype_id = dpe.phenotype_id;
     """
-    print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
     try:
         Cursor.execute(Consulta_SQL, (Farmaco,))
         Datos=Cursor.fetchall()
@@ -567,7 +585,6 @@ def Coger_indicaciones_fenotipo(Farmaco):
             print("\nNo hay efectos secundarios registrados para este fármaco.")
     except TypeError:
         print("· Este fármaco no está incluido en la base de datos.")
-    print("♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣\n")
     return 
 
 ##Subapartado 4.2: Efectos secundarios de un fármaco
@@ -577,7 +594,6 @@ def Coger_efectos_secundarios_fenotipo(Farmaco):
     WHERE dpe.drug_id = %s AND dpe.phenotype_type="SIDE EFFECT" AND pe.phenotype_id = dpe.phenotype_id
     ORDER BY score DESC;
     """
-    print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
     try:
         Cursor.execute(Consulta_SQL, (Farmaco,))
         Datos=Cursor.fetchall()
@@ -591,7 +607,6 @@ def Coger_efectos_secundarios_fenotipo(Farmaco):
             print("\nNo hay efectos secundarios registrados para este fármaco.")
     except TypeError:
         print("· No hay efectos secundarios registrados para este fármaco.")
-    print("♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣\n")
     return 
 
 ## Subapartado 4.3: Fármacos que provocan un efecto secundario determinado
@@ -663,7 +678,9 @@ def Coger_organismo_mas_dianas():
 ## Subapartado 5.3: Dianas que hay asociadas a un organismo en concreto
 def Dianas_organismo_concreto():
     Organismo=input("Por favor, indique el nombre de su organismo de interés (por ejemplo: Homo sapiens): ")
-    Sentencia="SELECT target_id, target_name_pref FROM target WHERE organism_id=(SELECT taxonomy_id FROM organism WHERE taxonomy_name = %s)"
+    Sentencia="""SELECT target_id, target_name_pref 
+                 FROM target 
+                 WHERE organism_id=(SELECT taxonomy_id FROM organism WHERE taxonomy_name = %s)"""
     Cursor.execute(Sentencia, (Organismo,))
     Dianas=Cursor.fetchall()
     print("\n*******************************************************************************************")
@@ -825,19 +842,23 @@ def Funcionalidades_3(Ir_a):
 def Funcionalidades_4(Ir_a):
     Cursor=Base.cursor()
     if Ir_a==1:
+        print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
         Farmaco=Buscar_farmaco()
         Cursor.execute("SELECT * FROM  drug WHERE drug_id = %s", (Farmaco,))
         if len(Cursor.fetchall())!=0:
             Coger_indicaciones_fenotipo(Farmaco)
         else:
             print("Este fármaco no está incluido en la base de datos.")
+        print("♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣\n")
     elif Ir_a==2:
+        print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
         Farmaco=Buscar_farmaco()
         Cursor.execute("SELECT * FROM drug WHERE drug_id = %s", (Farmaco,))
         if len(Cursor.fetchall())!=0:
             Coger_efectos_secundarios_fenotipo(Farmaco)
         else:
             print("Este fármaco no está incluido en la base de datos.")
+        print("♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣\n")
     elif Ir_a==3:
         Farmacos_provocan_efecto_secundario()
     Ir_a=4
