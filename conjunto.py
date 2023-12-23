@@ -32,7 +32,7 @@ def Seleccion(Opcion_mayor, Opcion_menor):
             #Una vez sabemos que la cadena es numérica, comprobamos que el número introducido esté entre las opciones posibles.
             #Lógicamente, no puede estar por debajo de la opción (número) más pequeña, ni por encima de la más grande.
             if Ir_a>Opcion_mayor or Ir_a<Opcion_menor:
-                print("No hay ningún menú que tenga asociado ese número. Por favor, revísalo.\n")
+                print("No hay ningún menú que tenga asociado ese número. Por favor, revíselo.\n")
             else:
                 #Si la cadena cumple todas las condiciones, salimos del bucle.
                 Continuar=False
@@ -41,7 +41,7 @@ def Seleccion(Opcion_mayor, Opcion_menor):
             if Ir_a == "X" or Ir_a == "x":
                 Continuar=False
             else:
-                print("Necesitas meter un número para avanzar. Inténtalo de nuevo.\n")  
+                print("Necesita meter un número para avanzar. Inténtelo de nuevo.\n")  
     #system("cls") ##PUEDE SER DE UTILIDAD, PERO LO COMENTO POR SI ACASO.
     #Devolvemos "Ir_a" (el menú seleccionado por el usuario) para alimentar otras funciones.
     return Ir_a
@@ -184,7 +184,7 @@ def Obtener_total_farmacos ():
 
 ## Subapartado 1.2: Número total de enfermedades diferentes 
 def Obtener_total_enfermedades ():
-    Numero_enfermedades = 'SELECT COUNT(disease_id)s FROM disease'
+    Numero_enfermedades = 'SELECT COUNT(disease_id) FROM disease'
     Cursor.execute(Numero_enfermedades)
     Datos = Cursor.fetchone()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -349,16 +349,24 @@ def Comprobar_farmaco_nombre():
             print(f"Lo sentimos, este fármaco no está dentro de la base. Vuelva a intentarlo de nuevo.")
     return Farmaco
 
-def Comprobar_codigo_farmaco(ID_Farmaco): 
-    Codigo_farmaco=input("\nPor favor, introduzca el código identificador del fármaco: ")
-    Consulta_SQL = "SELECT code_id FROM drug_has_code WHERE drug_id = %s AND code_id = %s"
-    Cursor.execute(Consulta_SQL, (ID_Farmaco, Codigo_farmaco,))
-    Datos=Cursor.fetchall()
-    if len(Datos) == 0:
-        print(f"\nEl código introducido está libre para su uso.")
-    else: 
-        Codigo_farmaco="fail"
-        print(f"\nLo sentimos, el código introducido ya está asociado a este fármaco.")
+#Para el apartado 7, comprobamos que para una tupla id de fármaco - vocabulario, no existe el código que el usuario introduce.
+#Si el vocabulario introcudico es DrugBank, se transforma el código introducido de forma que respete la nomenclatura de códigos para ese vocabulario.
+def Comprobar_codigo_farmaco(ID_Farmaco, Vocabulario_farmaco): 
+    Codigo_farmaco=input("Por favor, introduzca el código identificador del fármaco. El dato introducido ha de ser un número: ")
+    try: 
+        Codigo_farmaco=int(Codigo_farmaco)
+        if Vocabulario_farmaco == 'DrugBank': 
+            Codigo_farmaco = f"DB{Codigo_farmaco}"
+            Consulta_SQL = "SELECT code_id FROM drug_has_code WHERE drug_id = %s AND code_id = %s AND vocabulary = %s"
+            Cursor.execute(Consulta_SQL, (ID_Farmaco, Codigo_farmaco, Vocabulario_farmaco,))
+            Datos=Cursor.fetchall()
+            if len(Datos) == 0:
+                print(f"\nEl código introducido está libre para su uso.")
+            else: 
+                Codigo_farmaco="fail"
+                print(f"\nLo sentimos, el código introducido ya está asociado a este fármaco para el vocabulario introducido.")
+    except: 
+        print("Necesita meter un número para avanzar. Inténtelo de nuevo.\n")  
     return Codigo_farmaco
 
 #Esta función se define para que el usuario tenga la opción de generar un archivo de texto con los resultados de la consulta. Viene definido por una serie de argumentos: 
@@ -612,7 +620,8 @@ def Coger_efectos_secundarios_fenotipo(Farmaco):
 ## Subapartado 4.3: Fármacos que provocan un efecto secundario determinado
 def Farmacos_provocan_efecto_secundario():
     Efecto=input("Por favor, indique el efecto secundario que le interesa: ")
-    Sentencia="SELECT drug_id, drug_name FROM drug WHERE drug_id IN (SELECT drug_id FROM drug_phenotype_effect WHERE phenotype_id=(SELECT phenotype_id FROM phenotype_effect WHERE phenotype_name = %s))"
+    Sentencia="""SELECT drug_id, drug_name FROM drug 
+                 WHERE drug_id IN (SELECT drug_id FROM drug_phenotype_effect WHERE phenotype_id=(SELECT phenotype_id FROM phenotype_effect WHERE phenotype_name = %s))"""
     Cursor.execute(Sentencia, (Efecto,))
     Farmacos=Cursor.fetchall()
     print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
@@ -740,6 +749,7 @@ def Borrado():
                         """
             try: 
                 Cursor.execute(Borrado_SQL, (Seleccion_usuario[0], Seleccion_usuario[1], Seleccion_usuario[2],))
+                Base.commit()
                 print("\nEl borrado se ha realizado con éxito.")
             except mysql.connector.Error:
                 print("\nLo sentimos, no ha podido ejecutarse este borrado.")
@@ -749,20 +759,24 @@ def Borrado():
 def Inserciones():
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     print("Por medio de esta funcionalidad, usted puede ampliar las codificaciones de un fármaco ya existente en la base de datos.")
-    print("Usted debe introducir el nombre del fármaco, el nuevo código y el vocabulario del que proviene.")
-    print("El código introducido no puede estar ya asociado a ese fármaco.") 
+    print("Usted debe introducir el nombre del fármaco, el nuevo código y el vocabulario del que proviene. Los nombres del fármaco y vocabulario han de existir ya en la base de datos.")
+    print("El código introducido no puede estar ya asociado a ese fármaco para el vocabulario elegido.") 
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     ID_farmaco=Comprobar_farmaco_nombre()
     if re.search(r"^(CHEMBL)[0123456789]{1,}$", ID_farmaco):
-        Codigo_farmaco=Comprobar_codigo_farmaco(ID_farmaco)
-        if Codigo_farmaco != "fail":
-            Vocabulario_farmaco=input("Por favor, introduzca el nombre del vocabulario para el que pertenece el código: ")
-            Insercion_SQL="INSERT INTO drug_has_code(drug_id, code_id, vocabulary) VALUES (%s, %s, %s)" 
-            try: 
-                Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
-                print("\nLa inserción se ha realizaco con éxito.")
-            except mysql.connector.Error:
-                print("\nLo sentimos, no ha podido ejecutarse esta inserción")
+        Vocabulario_farmaco=input("Por favor, introduzca el nombre del vocabulario para el que pertenece el código: ")
+        if Vocabulario_farmaco == "RxNorm" or Vocabulario_farmaco == "DrugBank":
+            Codigo_farmaco=Comprobar_codigo_farmaco(ID_farmaco, Vocabulario_farmaco)
+            if Codigo_farmaco != "fail":
+                Insercion_SQL="INSERT INTO drug_has_code(drug_id, code_id, vocabulary) VALUES (%s, %s, %s)" 
+                try: 
+                    Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
+                    Base.commit()
+                    print("\nLa inserción se ha realizado con éxito.")
+                except mysql.connector.Error:
+                    print("\nLo sentimos, no ha podido ejecutarse esta inserción")
+        else: 
+            print("\nLo sentimos. El vocabulario que ha introducido no se encuentra presente en la bases de datos. Por favor, inténtelo de nuevo.")
     return
 
 #Apartado 8. Modificaciones 
@@ -784,6 +798,7 @@ def Modificaciones():
                                 SET score = 0 
                                 WHERE phenotype_type = "SIDE EFFECT" AND score < %s;"""
                 Cursor.execute(Modificacion_SQL, (Respuesta_usuario,))
+                Base.commit()
                 print("\nLa modificación se ha realizado con éxito.")
         else: 
             print("\nNo hay asocaciones fármaco-efecto secundario con un score menor al introducido.")
