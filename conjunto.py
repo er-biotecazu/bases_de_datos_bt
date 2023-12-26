@@ -1,11 +1,10 @@
-#Importamos el módulo que nos va a permitir trabajar sobre la base de datos.
+#Importamos el módulo que nos va a permitir trabajar sobre la base de datos y manejar errores. 
 import mysql.connector 
 from mysql.connector import errorcode
-#Importamos el resto de módulos que vayamos a necesitar.
+#Importamos el resto el módulo para trabajar con expresiones regulares. 
 import re
-    #from os import system
 
-#Creamos la conexión con la base de datos y la almacenamos en la variable "Base". Hacemos manejo de excepciones con la sentencia "try... except"
+#Por medio de la función Conexion() nos conectamos a la base de datos y, con la variable Base (objeto MySQLConnection), obtenemos un cursor. 
 def Conexion():
     Base=mysql.connector.connect(host="localhost",
                                 port=3306,
@@ -19,7 +18,7 @@ Base=Conexion()
 Cursor=Base.cursor()
 
 #Definimos una función que sirve para comprobar el menú que está metiendo el usuario. Analiza:
- # a) Que la cadena introducida no sea texto (manejado con el "try... except ValueError"). 
+ # a) Que la cadena introducida no sea texto (manejado con el "try... except ValueError"), con la excepción de "X", que sirve para terminar la ejecución del programa. 
  # Esto se basa en el hecho de que la función "int" lanza una excepción con cadenas de texto que no pueden convertirse en enteros. 
  # b) Que el número introducido esté en el menú (números dentro del rango correspondiente).
 def Seleccion(Opcion_mayor, Opcion_menor):
@@ -38,11 +37,11 @@ def Seleccion(Opcion_mayor, Opcion_menor):
                 Continuar=False
         #Este error sólo salta cuando el usuario mete texto (no se puede aplicar "int" a cadenas no numéricos).
         except ValueError:
-            if Ir_a == "X" or Ir_a == "x":
+            #Si la cadena introducida es "X", se sale del bucle. 
+            if re.search(r"[xX]", Ir_a):
                 Continuar=False
             else:
                 print("Necesita meter un número para avanzar. Inténtelo de nuevo.\n")  
-    #system("cls") ##PUEDE SER DE UTILIDAD, PERO LO COMENTO POR SI ACASO.
     #Devolvemos "Ir_a" (el menú seleccionado por el usuario) para alimentar otras funciones.
     return Ir_a
 
@@ -170,11 +169,11 @@ def Menu_8():
 #A continuación, definimos los comandos DML que se requieren en los distintos apartados de los submenús por medio de funciones. 
 
 # Apartado 1: Información general de la base de datos 
-## Subapartado 1.1: Número total de fármacos diferentes 
+#Para los subapartados 1.1 - 1.4, empleamos la función de agregación "count()" con la clave primaria de las respectivas tablas.
 
-#Para los subapartados 1.1 - 1.4, empleamos la función "count()" con la clave primaria de las respectivas tablas, para asegurarnos que no haya campos vacíos. 
+## Subapartado 1.1: Número total de fármacos diferentes 
 def Obtener_total_farmacos (): 
-    Numero_farmacos = 'SELECT COUNT(drug_id) FROM drug'
+    Numero_farmacos = "SELECT COUNT(drug_id) FROM drug"
     Cursor.execute(Numero_farmacos)
     Datos = Cursor.fetchone()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -184,7 +183,7 @@ def Obtener_total_farmacos ():
 
 ## Subapartado 1.2: Número total de enfermedades diferentes 
 def Obtener_total_enfermedades ():
-    Numero_enfermedades = 'SELECT COUNT(disease_id) FROM disease'
+    Numero_enfermedades = "SELECT COUNT(disease_id) FROM disease"
     Cursor.execute(Numero_enfermedades)
     Datos = Cursor.fetchone()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -194,7 +193,7 @@ def Obtener_total_enfermedades ():
 
 ## Subapartado 1.3: Número total de fenotipos diferentes
 def Obtener_total_fenotipos ():
-    Numero_fenotipos = 'SELECT COUNT(phenotype_id) FROM phenotype_effect'
+    Numero_fenotipos = "SELECT COUNT(phenotype_id) FROM phenotype_effect"
     Cursor.execute(Numero_fenotipos)
     Datos = Cursor.fetchone()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -204,7 +203,7 @@ def Obtener_total_fenotipos ():
 
 ## Subapartado 1.4: Número total de dianas diferentes 
 def Obtener_total_dianas (): 
-    Numero_dianas = 'SELECT COUNT(target_id) FROM target'
+    Numero_dianas = "SELECT COUNT(target_id) FROM target"
     Cursor.execute(Numero_dianas)
     Datos = Cursor.fetchone()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -212,22 +211,21 @@ def Obtener_total_dianas ():
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
     return 
 
+#Para los subapartados 1.5-1.8, se seleccionan las diez primeras instancias de fármacos, enfermedades, fenotipos y dianas
+#con la condición de que los campos seleccionados no sean nulos. 
+
 ## Subapartado 1.5: Mostrar las primeras diez instancias de fármacos
 def Primeros_resultados_farmacos ():
     Instancias_farmacos = """ 
-        SELECT drug_id, 
-	           drug_name, 
-               molecular_type, 
-               chemical_structure,
-               inchi_key 
-        FROM drug
-        WHERE drug_id IS NOT NULL AND drug_name IS NOT NULL AND molecular_type IS NOT NULL AND chemical_structure IS NOT NULL AND inchi_key IS NOT NULL
-        LIMIT 10;
-        """
+                          SELECT drug_id, drug_name, molecular_type, chemical_structure, inchi_key 
+                          FROM drug
+                          WHERE drug_id IS NOT NULL AND drug_name IS NOT NULL AND molecular_type IS NOT NULL AND chemical_structure IS NOT NULL AND inchi_key IS NOT NULL
+                          LIMIT 10;
+                          """
     Cursor.execute(Instancias_farmacos)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    Encabezado="N.º\tIdentificador\tNombre\t\tTipo molecular\tEstructura química\tClave InChy\n"
+    Encabezado="♣♣\t\t\tDiez primeras instancias de fármacos\t\t\t♣♣\n\nN.º\tIdentificador\tNombre\t\tTipo molecular\tEstructura química\tClave InChy\n"
     print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
@@ -240,16 +238,16 @@ def Primeros_resultados_farmacos ():
 ## Subapartado 1.6: Mostrar las primeras diez instancias de enfermedades
 def Primeros_resultados_enfermedades ():
     Instancias_enfermedades = """
-        SELECT disease_id, 
-	           disease_name
-        FROM disease
-        WHERE disease_id IS NOT NULL AND disease_name IS NOT NULL
-        LIMIT 10; 
-    """
+                              SELECT disease_id, disease_name
+                              FROM disease
+                              WHERE disease_id IS NOT NULL AND disease_name IS NOT NULL
+                              LIMIT 10; 
+                              """
     Cursor.execute(Instancias_enfermedades)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    Encabezado="N.º\tIdentificador\tNombre\n"
+    Encabezado="**\t\t\tDiez primeras instancias de enfermedades\t\t\t**\n\nN.º\tIdentificador\tNombre\n"
+    print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -261,14 +259,15 @@ def Primeros_resultados_enfermedades ():
 ## Subapartado 1.7: Mostrar las primeras diez instancias de fenotipos
 def Primeros_resultados_fenotipos():
     Instancias_fenotipos = """
-        SELECT * FROM phenotype_effect 
-        WHERE phenotype_id IS NOT NULL AND phenotype_name IS NOT NULL
-        LIMIT 10; 
-        """
+                           SELECT * FROM phenotype_effect 
+                           WHERE phenotype_id IS NOT NULL AND phenotype_name IS NOT NULL
+                           LIMIT 10; 
+                           """
     Cursor.execute(Instancias_fenotipos)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    Encabezado="N.º\tIdentificador\tNombre\n"
+    Encabezado="♣♣\t\t\tDiez primeras instancias de fenotipos\t\t\t♣♣\n\nN.º\tIdentificador\tNombre\n"
+    print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
@@ -280,18 +279,15 @@ def Primeros_resultados_fenotipos():
 ## Subapartado 1.8: Mostrar las primeras diez instancias de dianas 
 def Primeros_resultados_dianas():
     Instancias_dianas = """
-        SELECT t.target_id, 
-               t.target_name_pref, 
-               t.target_type, 
-               o.taxonomy_name 
-        FROM target AS t, organism AS o
-        WHERE t.organism_id=o.taxonomy_id AND t.target_id IS NOT NULL AND t.target_name_pref IS NOT NULL AND t.target_type IS NOT NULL AND o.taxonomy_name IS NOT NULL
-        LIMIT 10;
-        """
+                        SELECT t.target_id, t.target_name_pref, t.target_type, o.taxonomy_name 
+                        FROM target AS t, organism AS o
+                        WHERE t.organism_id=o.taxonomy_id AND t.target_id IS NOT NULL AND t.target_name_pref IS NOT NULL AND t.target_type IS NOT NULL AND o.taxonomy_name IS NOT NULL
+                        LIMIT 10;
+                        """
     Cursor.execute(Instancias_dianas)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    Encabezado="N.º\tIdentificador\tNombre\t\t\tTipo\t\t\tOrganismo\n"
+    Encabezado="♣♣\t\t\tDiez primeras instancias de dianas\t\t\t♣♣\n\nN.º\tIdentificador\tNombre\t\t\tTipo\t\t\tOrganismo\n"
     print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
@@ -301,6 +297,7 @@ def Primeros_resultados_dianas():
     Obtener_archivo_texto(4, Encabezado, Datos, "Consulta_1.8.txt")
     return 
 
+#La función que se define a continuación sirve para alimentar otras funciones. Comprueba que el identificador ChEMBL que se introduce de un fármaco es correcto. 
 def Buscar_farmaco():
     Continuar=True
     while Continuar:
@@ -313,70 +310,15 @@ def Buscar_farmaco():
     
     return Farmaco
 
-def Comprobar_farmaco_nombre():
-    Farmaco=input("\nPor favor, introduzca el nombre de su fármaco de interés (ejemplo: ASPIRIN): ")
-    Consulta_SQL = "SELECT drug_name FROM drug WHERE drug_name = %s"
-    Cursor.execute(Consulta_SQL, (Farmaco,))
-    Datos=Cursor.fetchall()
-    if len(Datos) != 0:
-        Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s"
-        Cursor.execute(Consulta2_SQL, (Farmaco,))
-        Datos = Cursor.fetchone()
-        Farmaco = Datos[0]
-    elif len(Farmaco) >= 3: 
-        Consulta3_SQL = "SELECT drug_name FROM drug WHERE drug_name LIKE %s"
-        Farmaco = f"%{Farmaco}%"
-        Cursor.execute(Consulta3_SQL, (Farmaco,))
-        Datos=Cursor.fetchall()
-        if len(Datos) != 0:
-            print("\nLo sentimos, no hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?: \n")
-            Numero_inicial = 1
-            for Fila in Datos:
-                print(f"{Numero_inicial}: {Fila[0]}")
-                Numero_inicial+=1
-            Respuesta_usuario=input(f"\n¿Se encuentra su fármaco de interés en la lista? [sí|no]: ")
-            if re.search("[Ss][IiÍí]", Respuesta_usuario): 
-                Respuesta2_usario=input("\nPor favor, seleccione el número de su fármaco de interés: ")
-                Farmaco=Datos[int(Respuesta2_usario)-1][0]
-                print(f"Su elección ha sido: {Farmaco}.")
-                Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s"
-                Cursor.execute(Consulta2_SQL, (Farmaco,))
-                Datos = Cursor.fetchone()
-                Farmaco = Datos[0]
-        else:
-            print(f"Lo sentimos, este fármaco no está dentro de la base. Vuelva a intentarlo de nuevo.")
-    else:
-            print(f"Lo sentimos, este fármaco no está dentro de la base. Vuelva a intentarlo de nuevo.")
-    return Farmaco
-
-#Para el apartado 7, comprobamos que para una tupla id de fármaco - vocabulario, no existe el código que el usuario introduce.
-#Si el vocabulario introcudico es DrugBank, se transforma el código introducido de forma que respete la nomenclatura de códigos para ese vocabulario.
-def Comprobar_codigo_farmaco(ID_Farmaco, Vocabulario_farmaco): 
-    Codigo_farmaco=input("Por favor, introduzca el código identificador del fármaco. El dato introducido ha de ser un número: ")
-    try: 
-        Codigo_farmaco=int(Codigo_farmaco)
-        if Vocabulario_farmaco == 'DrugBank': 
-            Codigo_farmaco = f"DB{Codigo_farmaco}"
-            Consulta_SQL = "SELECT code_id FROM drug_has_code WHERE drug_id = %s AND code_id = %s AND vocabulary = %s"
-            Cursor.execute(Consulta_SQL, (ID_Farmaco, Codigo_farmaco, Vocabulario_farmaco,))
-            Datos=Cursor.fetchall()
-            if len(Datos) == 0:
-                print(f"\nEl código introducido está libre para su uso.")
-            else: 
-                Codigo_farmaco="fail"
-                print(f"\nLo sentimos, el código introducido ya está asociado a este fármaco para el vocabulario introducido.")
-    except: 
-        print("Necesita meter un número para avanzar. Inténtelo de nuevo.\n")  
-    return Codigo_farmaco
-
-#Esta función se define para que el usuario tenga la opción de generar un archivo de texto con los resultados de la consulta. Viene definido por una serie de argumentos: 
-    #Numero_campos se refiere al conjunto de elementos de cada tupla resultante de la consulta que se presentan en la salida. 
-    #Encabezado contiene el encabezado de los distintos atributos para una determinada consulta. 
-    #Datos contiene el resultado de las tuplas de la consulta tal y como se almacenan en una variable con fetchall o fetchone. 
-    #Consulta contiene la consulta introducida por el usuario (input)
+#La función que se define a continuación sirve para que el usuario tenga la opción de generar un archivo de texto 
+#con los resultados de la consulta. Viene definido por una serie de argumentos: 
+    #Numero_campos se refiere al total de campos que se devuelve en cada tupla.  
+    #Encabezado contiene el encabezado para una determinada consulta. 
+    #Datos contiene las tuplas de la consulta tal y como se almacenan en una variable con fetchall o fetchone. 
+    #Consulta contiene la consulta introducida por el usuario (input).
     #Nombre_archivo será el nombre que le demos al archivo de texto. 
 def Obtener_archivo_texto(Numero_campos, Encabezado, Datos, Nombre_archivo): 
-    Respuesta_usuario=input("¿Quiere generar un archivo de texto con los resultados de la consulta que se guardará en su directorio de trabajo? [sí|no]: ")
+    Respuesta_usuario=input("¿Quiere generar un archivo de texto con los resultados de la consulta que se guardará en su directorio de trabajo? [En caso afirmativo, escriba \"Sí\"]: ")
     if re.search("[Ss][IiÍí]", Respuesta_usuario):
         Archivo_salida=open(Nombre_archivo, "w")
         #Archivo_salida.write(f"El usuario introdujo como dato a su consulta '{Consulta}'.")
@@ -399,93 +341,86 @@ def Obtener_archivo_texto(Numero_campos, Encabezado, Datos, Nombre_archivo):
 # Apartado 2: Información de los fármacos
 ## Subapartado 2.1: Información sobre un fármaco
 def Coger_informacion_farmaco_especifico(Farmaco): 
-    Consulta_SQL = """SELECT drug_name, molecular_type, chemical_structure, inchi_key FROM drug
-                WHERE drug_id = %s"""
+    Consulta_SQL = """
+                   SELECT drug_name, molecular_type, chemical_structure, inchi_key FROM drug
+                   WHERE drug_id = %s;
+                   """
     print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    try:
-        Cursor.execute(Consulta_SQL, (Farmaco,))
-        Datos=Cursor.fetchone()
-        if len(Datos) != 0:
-            print("Nombre\tTipo molecular\tEstructura química\tClave InChi\n")
-            print(f"{Datos[0]}\t{Datos[1]}\t{Datos[2]}\t{Datos[3]}")
-        else:
-            print("Este fármaco no está incluido en la base de datos.")
-    except TypeError:
+    Cursor.execute(Consulta_SQL, (Farmaco,))
+    Datos=Cursor.fetchall()
+    if len(Datos) != 0:
+        print("Nombre\tTipo molecular\tEstructura química\tClave InChi\n")
+        print(f"{Datos[0][0]}\t{Datos[0][1]}\t{Datos[0][2]}\t{Datos[0][3]}")
+    else:
         print("Este fármaco no está incluido en la base de datos.")
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     return 
 
-
 ## Subapartado 2.2: Sinónimos de un fármaco 
 def Coger_sinonimos_farmaco_especifico():
-    Respuesta_usuario=input("\nPor favor, indique el nombre del fármaco del cual quiere obtener sus sinónimos (ejemplo: ASPIRIN): ")
+    Respuesta_usuario=input("Por favor, indique el nombre del fármaco del cual quiere obtener sus sinónimos (ejemplo: ASPIRIN): ")
     Consulta_SQL = """
-            SELECT synonymous_name FROM synonymous 
-            WHERE d.drug_id IN (SELECT drug_id FROM drug WHERE drug_name = %s); """
+                   SELECT synonymous_name FROM synonymous 
+                   WHERE drug_id IN (SELECT drug_id FROM drug WHERE drug_name = %s); 
+                   """
     #Obsérvese que para la subconsulta utilizamos un IN en lugar de un = porque en algunos casos, para un mismo nombre de fármaco, devuelve distintos drug_id (y daría un error)
-    try:
-        Cursor.execute(Consulta_SQL, (Respuesta_usuario, ))
-        Datos=Cursor.fetchall()
-        print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        if len(Datos) != 0:
-            print(f"Los sinónimos encontrados para el fármaco {Respuesta_usuario.capitalize()} son: ")
-            for Fila in Datos: 
-                print(Fila[0])
-        else: 
-            print("No hay sinónimos para el fármaco proporcionado.")
-        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
-    except TypeError: 
-        print("· Este fármaco no está incluido en la base de datos.")
+    Cursor.execute(Consulta_SQL, (Respuesta_usuario, ))
+    Datos=Cursor.fetchall()
+    print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    if len(Datos) != 0:
+        print(f"Los sinónimos encontrados para el fármaco {Respuesta_usuario.capitalize()} son: ")
+        for Fila in Datos: 
+            print(Fila[0])
+    else: 
+        print("No hay sinónimos para el fármaco proporcionado.")
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     return 
 
 ## Subapartado 2.3: Código ATC de un fármaco
 def Coger_codigos_ATC_farmaco_especifico(Farmaco):
     Consulta_SQL = """
-            SELECT ATC_code_id FROM atc_code 
-            WHERE drug_id = %s
-        """
-    try: 
-        Cursor.execute(Consulta_SQL, (Farmaco,))
-        Datos=Cursor.fetchall()
-        #Los resultados se presentarán de forma diferente en función de si existe o no código ATC para el fármaco en cuestión y, en caso que exista, si hay más de uno. 
-        print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        if len(Datos) != 0: 
-            if len(Datos) == 1:
-                print(f"Identificador ATC del fármaco seleccionado: {Datos[0][0]}")
-            else: 
-                print("Identificadores ATC del fármaco seleccionado: ")
-                Numero_inicial = 1
-                for Fila in Datos: 
-                    print(f"{Numero_inicial}: {Fila[0][0]}")
-                    Numero_inicial+=1
+                   SELECT ATC_code_id FROM atc_code 
+                   WHERE drug_id = %s
+                   """
+    Cursor.execute(Consulta_SQL, (Farmaco,))
+    Datos=Cursor.fetchall()
+    #Los resultados se presentarán de forma diferente en función de si existe o no código ATC para el fármaco en cuestión y, en caso que exista, si hay más de uno. 
+    print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    if len(Datos) != 0: 
+        if len(Datos) == 1:
+            print(f"Identificador ATC del fármaco seleccionado: {Datos[0][0]}")
         else: 
-            print("   No se ha encontrado ningún identificador ATC para el fármaco solicitado.   ")
-        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
-    except TypeError:
-        print("· Este fármaco no está incluido en la base de datos.")
+            print("Identificadores ATC del fármaco seleccionado: ")
+            Numero_inicial = 1
+            for Fila in Datos: 
+                print(f"{Numero_inicial}: {Fila[0]}")
+                Numero_inicial+=1
+    else: 
+        print("No se ha encontrado ningún identificador ATC para el fármaco solicitado.")
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     return 
 
 ## Subapartado 2.4: Enfermedades que puede tratar un fármaco determinado
 def Farmaco_trata_enfermedades():
     Farmaco=input("Introduce el nombre de tu fármaco de interés (por ejemplo, ASPIRIN): ")
-    Sentencia="""SELECT d.disease_id, d.disease_name FROM disease AS d, disease_has_code AS dhc, drug_disease AS dd
-                WHERE dd.drug_id IN (SELECT drug_ID FROM drug WHERE drug_name=%s) AND dhc.code_id = dd.code_id AND d.disease_id = dhc.disease_id;"""
+    Sentencia="""
+              SELECT d.disease_id, d.disease_name FROM disease AS d, disease_has_code AS dhc, drug_disease AS dd
+              WHERE dd.drug_id IN (SELECT drug_ID FROM drug WHERE drug_name=%s) AND dhc.code_id = dd.code_id AND d.disease_id = dhc.disease_id;
+              """
     #Sentencia="SELECT * FROM disease WHERE disease_id IN (SELECT disease_id FROM disease_has_code WHERE code_id IN (SELECT code_id FROM drug_disease WHERE drug_id IN (SELECT drug_id FROM drug WHERE drug_name = %s)))"
-    try:
-        Cursor.execute(Sentencia, (Farmaco,))
-        Enfermedades_tratables=Cursor.fetchall()
-        print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        if len(Enfermedades_tratables)!=0:
-            print("N.º\tIdentificador\tNombre\n")
-            Numero_inicial=1
-            for Enfermedad in Enfermedades_tratables:
-                print(f"{Numero_inicial}\t{Enfermedad[0]}\t{Enfermedad[1]}")
-                Numero_inicial+=1
-        else:
-            print("Esta enfermedad no cuenta con fármacos contra ella introducidos en la base de datos.")
-        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
-    except TypeError:
-        print("· Esta enfermedad no cuenta con fármacos contra ella introducidos en la base de datos.")
+    Cursor.execute(Sentencia, (Farmaco,))
+    Enfermedades_tratables=Cursor.fetchall()
+    print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    if len(Enfermedades_tratables)!=0:
+        print("N.º\tIdentificador\tNombre\n")
+        Numero_inicial = 1
+        for Enfermedad in Enfermedades_tratables:
+            print(f"{Numero_inicial}\t{Enfermedad[0]}\t{Enfermedad[1]}")
+            Numero_inicial+=1
+    else:
+        print("Esta enfermedad no cuenta con fármacos contra ella introducidos en la base de datos.")
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
+    return
 
 ## Subapartado 2.5: Obtener identificadores del fármaco 
 def Obtener_identificadores_farmaco():
@@ -519,39 +454,37 @@ def Obtener_identificadores_farmaco():
 # Apartado 3. Información de las enfermedades 
 ## Subapartado 3.1: Fármacos para una enfermedad: 
 def Coger_farmacos_para_enfermedad(): 
-    Respuesta_usuario = input("\nPor favor, indique el nombre de la enfermedad de la que quiere consultar los fármacos involucrados en su tratamiento: ")
+    Respuesta_usuario = input("Por favor, indique el nombre de la enfermedad de la que quiere consultar los fármacos involucrados en su tratamiento: ")
     Consulta_SQL = """
-        SELECT d.drug_id, d.drug_name FROM drug_disease as dd, drug as d
-        WHERE dd.code_id IN (SELECT code_id FROM disease_code WHERE name = %s) AND dd.drug_id = d.drug_id;
-        """
-    try:
-        Cursor.execute(Consulta_SQL, (Respuesta_usuario,))
-        Datos=Cursor.fetchall()
-        print("\n##############################################################################################")
-        if len(Datos) != 0:
-            print("N.º\tIdentificador\tNombre\n")
-            Numero_inicial=1
-            for Fila in Datos:
-                print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
-                Numero_inicial+=1
-        else:
-            print("Esta enfermedad no está incluida en la base de datos.")
-        print("##############################################################################################\n")
-    except TypeError:
-        print("· Esta enfermedad no está incluida en la base de datos.")
+                   SELECT d.drug_id, d.drug_name FROM drug_disease as dd, drug as d
+                   WHERE dd.code_id IN (SELECT code_id FROM disease_code WHERE name = %s) AND dd.drug_id = d.drug_id;
+                   """
+    Cursor.execute(Consulta_SQL, (Respuesta_usuario,))
+    Datos=Cursor.fetchall()
+    print("\n##############################################################################################")
+    if len(Datos) != 0:
+        print("N.º\tIdentificador\tNombre\n")
+        Numero_inicial=1
+        for Fila in Datos:
+            print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
+            Numero_inicial+=1
+    else:
+        print("Esta enfermedad no está incluida en la base de datos.")
+    print("##############################################################################################\n")
     return 
 
 ## Subapartado 3.2: Enfermedad y fármaco con el mayor "score" de asociación.
 def Mayor_asociacion():
-    Sentencia="""SELECT d.drug_name, dc.name, dd.inferred_score FROM drug_disease AS dd, drug AS d, disease_code AS dc
-                 WHERE d.drug_id = (SELECT drug_id FROM drug_disease
+    Sentencia="""
+              SELECT d.drug_name, dc.name, dd.inferred_score FROM drug_disease AS dd, drug AS d, disease_code AS dc
+              WHERE d.drug_id = (SELECT drug_id FROM drug_disease
 					                ORDER BY inferred_score DESC
 					                LIMIT 1) 
-                 AND dc.code_id = (SELECT code_id FROM drug_disease
+              AND dc.code_id = (SELECT code_id FROM drug_disease
 				                    ORDER BY inferred_score DESC
 				                    LIMIT 1)
-                 AND dd.code_id = dc.code_id AND dd.drug_id = d.drug_id;
-        """
+              AND dd.code_id = dc.code_id AND dd.drug_id = d.drug_id;
+              """
     Cursor.execute(Sentencia)
     Resultado=Cursor.fetchone()   
     print("\n##############################################################################################################")
@@ -577,51 +510,47 @@ def Buscar_termino_clave():
 ##Subapartado 4.1: Indicaciones de un fármaco
 def Coger_indicaciones_fenotipo(Farmaco): 
     Consulta_SQL = """
-    SELECT pe.phenotype_id, pe.phenotype_name FROM drug_phenotype_effect AS dpe, phenotype_effect AS pe
-    WHERE dpe.drug_id = %s AND dpe.phenotype_type="INDICATION" AND pe.phenotype_id = dpe.phenotype_id;
-    """
-    try:
-        Cursor.execute(Consulta_SQL, (Farmaco,))
-        Datos=Cursor.fetchall()
-        if len(Datos) != 0: 
-            print("N.º\tID del fenotipo\tIndicado para\n")
-            Numero_inicial=1
-            for Fila in Datos: 
-                print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
-                Numero_inicial+=1
-        else: 
-            print("\nNo hay efectos secundarios registrados para este fármaco.")
-    except TypeError:
-        print("· Este fármaco no está incluido en la base de datos.")
+                   SELECT pe.phenotype_id, pe.phenotype_name FROM drug_phenotype_effect AS dpe, phenotype_effect AS pe
+                   WHERE dpe.drug_id = %s AND dpe.phenotype_type="INDICATION" AND pe.phenotype_id = dpe.phenotype_id;
+                   """
+    Cursor.execute(Consulta_SQL, (Farmaco,))
+    Datos=Cursor.fetchall()
+    if len(Datos) != 0: 
+        print("N.º\tID del fenotipo\tIndicado para\n")
+        Numero_inicial=1
+        for Fila in Datos: 
+            print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
+            Numero_inicial+=1
+    else: 
+        print("\nNo hay efectos secundarios registrados para este fármaco.")
     return 
 
 ##Subapartado 4.2: Efectos secundarios de un fármaco
 def Coger_efectos_secundarios_fenotipo(Farmaco): 
     Consulta_SQL = """
-    SELECT pe.phenotype_id, pe.phenotype_name FROM drug_phenotype_effect AS dpe, phenotype_effect AS pe
-    WHERE dpe.drug_id = %s AND dpe.phenotype_type="SIDE EFFECT" AND pe.phenotype_id = dpe.phenotype_id
-    ORDER BY score DESC;
-    """
-    try:
-        Cursor.execute(Consulta_SQL, (Farmaco,))
-        Datos=Cursor.fetchall()
-        if len(Datos) != 0: 
-            print("\nID del fenotipo\t\tEfecto secundario\n")
-            Numero_inicial=1
-            for Fila in Datos: 
-                print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
-                Numero_inicial+=1
-        else: 
-            print("\nNo hay efectos secundarios registrados para este fármaco.")
-    except TypeError:
-        print("· No hay efectos secundarios registrados para este fármaco.")
+                   SELECT pe.phenotype_id, pe.phenotype_name FROM drug_phenotype_effect AS dpe, phenotype_effect AS pe
+                   WHERE dpe.drug_id = %s AND dpe.phenotype_type="SIDE EFFECT" AND pe.phenotype_id = dpe.phenotype_id
+                   ORDER BY score DESC;
+                   """
+    Cursor.execute(Consulta_SQL, (Farmaco,))
+    Datos=Cursor.fetchall()
+    if len(Datos) != 0: 
+        print("\nID del fenotipo\t\tEfecto secundario\n")
+        Numero_inicial=1
+        for Fila in Datos: 
+            print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}")
+            Numero_inicial+=1
+    else: 
+        print("\nNo hay efectos secundarios registrados para este fármaco.")
     return 
 
 ## Subapartado 4.3: Fármacos que provocan un efecto secundario determinado
 def Farmacos_provocan_efecto_secundario():
     Efecto=input("Por favor, indique el efecto secundario que le interesa: ")
-    Sentencia="""SELECT drug_id, drug_name FROM drug 
-                 WHERE drug_id IN (SELECT drug_id FROM drug_phenotype_effect WHERE phenotype_id=(SELECT phenotype_id FROM phenotype_effect WHERE phenotype_name = %s))"""
+    Sentencia="""
+              SELECT drug_id, drug_name FROM drug 
+              WHERE drug_id IN (SELECT drug_id FROM drug_phenotype_effect WHERE phenotype_id=(SELECT phenotype_id FROM phenotype_effect WHERE phenotype_name = %s))
+              """
     Cursor.execute(Sentencia, (Efecto,))
     Farmacos=Cursor.fetchall()
     print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
@@ -640,11 +569,11 @@ def Farmacos_provocan_efecto_secundario():
 def Coger_primeras_dianas(): 
     Respuesta_usuario=input("\nPor favor, introduzca el tipo de diana de la que quiere obtener sus 20 primeras instancias: ")
     Consulta_SQL = """
-    SELECT target_id, target_name_pref FROM target 
-    WHERE target_type = %s
-    ORDER BY target_name_pref ASC
-    LIMIT 20;
-    """
+                   SELECT target_id, target_name_pref FROM target 
+                   WHERE target_type = %s
+                   ORDER BY target_name_pref ASC
+                   LIMIT 20;
+                   """
     Cursor.execute(Consulta_SQL, (Respuesta_usuario,))
     Datos=Cursor.fetchall()
     if len(Datos) != 0: 
@@ -662,19 +591,19 @@ def Coger_primeras_dianas():
 ## Subapartado 5.2: Organismo al que se asocian un mayor número de dianas
 def Coger_organismo_mas_dianas(): 
     Consulta_SQL = """
-    SELECT o.taxonomy_name, taxonomy_id, count(organism_id) FROM target, organism AS o
-    WHERE o.taxonomy_id = organism_id
-    GROUP BY organism_id
-    ORDER BY count(organism_id) DESC
-    LIMIT 1;
-    """
+                   SELECT o.taxonomy_name, taxonomy_id, count(organism_id) FROM target, organism AS o
+                   WHERE o.taxonomy_id = organism_id
+                   GROUP BY organism_id
+                   ORDER BY count(organism_id) DESC
+                   LIMIT 1;
+                   """
     Cursor.execute(Consulta_SQL)
     Datos=Cursor.fetchone()
     print("\n*******************************************************************************************")
     print(f"El organismo con más dianas es: {Datos[0]} (identificador: {Datos[1]}), con un total de {Datos[2]} dianas.")
-    Respuesta_usuario=input("\n¿Quiere consultar el total de las dianas para el organismo seleccionado? [sí|no]: ")
+    Respuesta_usuario=input("\n¿Quiere consultar el total de las dianas para el organismo seleccionado? [En caso afirmativo, escriba \"Sí\"]: ")
     if re.search("[Ss][IiÍí]", Respuesta_usuario):    
-        Sentencia2="SELECT target_id, target_name_pref FROM target WHERE organism_id = %s"
+        Sentencia2="SELECT target_id, target_name_pref FROM target WHERE organism_id = %s;"
         Cursor.execute(Sentencia2, (Datos[1],))
         Dianas=Cursor.fetchall()
         Numero_inicial=1
@@ -687,9 +616,11 @@ def Coger_organismo_mas_dianas():
 ## Subapartado 5.3: Dianas que hay asociadas a un organismo en concreto
 def Dianas_organismo_concreto():
     Organismo=input("Por favor, indique el nombre de su organismo de interés (por ejemplo: Homo sapiens): ")
-    Sentencia="""SELECT target_id, target_name_pref 
-                 FROM target 
-                 WHERE organism_id=(SELECT taxonomy_id FROM organism WHERE taxonomy_name = %s)"""
+    Sentencia="""
+              SELECT target_id, target_name_pref 
+              FROM target 
+              WHERE organism_id=(SELECT taxonomy_id FROM organism WHERE taxonomy_name = %s);
+              """
     Cursor.execute(Sentencia, (Organismo,))
     Dianas=Cursor.fetchall()
     print("\n*******************************************************************************************")
@@ -721,11 +652,11 @@ def Borrado():
     print("Usted dispone de la oportunidad de borrar alguna de esas asociaciones.")
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     sql_query = """ 
-    SELECT dd.inferred_score, d.drug_name, dc.name FROM drug_disease AS dd, drug AS d, disease_code AS dc
-    WHERE d.drug_id = dd.drug_id AND dc.code_id = dd.code_id AND inferred_score IS NOT NULL
-    ORDER BY inferred_score ASC
-    LIMIT 10;
-    """
+                SELECT dd.inferred_score, d.drug_name, dc.name FROM drug_disease AS dd, drug AS d, disease_code AS dc
+                WHERE d.drug_id = dd.drug_id AND dc.code_id = dd.code_id AND inferred_score IS NOT NULL
+                ORDER BY inferred_score ASC
+                LIMIT 10;
+                """
     Cursor.execute(sql_query)
     Datos=Cursor.fetchall()
     print("\nN.º\tScore inferido\tNombre del fármaco\tNombre de la enfermedad")
@@ -733,50 +664,128 @@ def Borrado():
     for Fila in Datos: 
         print(f"{Numero_inicial}\t{Fila[0]}\t{Fila[1]}\t{Fila[2]}")
         Numero_inicial+=1
-    Respuesta_usuario=input("\n¿Desea borrar alguna asociación de entre las mostradas? [sí|no]: ")
+    Respuesta_usuario=input("\n¿Desea borrar alguna asociación de entre las mostradas? [En caso afirmativo, escriba \"Sí\"]: ")
     if re.search("[Ss][IiÍí]", Respuesta_usuario):
         Respuesta_usuario2 = input("Indique el número de la asociación que quiere borrar: ")
         Seleccion_usuario = Datos[int(Respuesta_usuario2)-1]
         print("Esta ha sido su selección:")
         print(f"{Seleccion_usuario[0]}\t{Seleccion_usuario[1]}\t{Seleccion_usuario[2]}")
-        Respuesta_usuario3 = input("\n¿Está seguro de que quiere borrar esta relación? [sí|no]: ")
+        Respuesta_usuario3 = input("\n¿Está seguro de que quiere borrar esta relación? [En caso afirmativo, escriba \"Sí\"]: ")
         #Nótese que para buscar el fármaco que tiene el valor de inferred_score seleccionado para su borrado, utilizamos la función 'LIKE'. Esto se debe a que los valores de esta columna 
         #son de tipo 'float'. El sistema, internamente, representa los valores con mayor precisión añadiendo un número mayor de decimales que los que se devuelven en la consulta, por lo 
         #que no se puede utilizar un igual en este caso. 
         if  re.search("[Ss][IiÍí]", Respuesta_usuario3):
-            Borrado_SQL = """DELETE FROM drug_disease 
-                        WHERE inferred_score LIKE %s AND drug_id = (SELECT drug_id FROM drug WHERE drug_name = %s) AND code_id = (SELECT code_id FROM disease_code WHERE name = %s)
-                        """
+            Borrado_SQL = """
+                          DELETE FROM drug_disease 
+                          WHERE inferred_score LIKE %s AND drug_id = (SELECT drug_id FROM drug WHERE drug_name = %s) AND code_id = (SELECT code_id FROM disease_code WHERE name = %s)
+                          """
             try: 
                 Cursor.execute(Borrado_SQL, (Seleccion_usuario[0], Seleccion_usuario[1], Seleccion_usuario[2],))
                 Base.commit()
                 print("\nEl borrado se ha realizado con éxito.")
-            except mysql.connector.Error:
+            except:
                 print("\nLo sentimos, no ha podido ejecutarse este borrado.")
     return 
 
 #Apartado 7: Inserciones 
+
+###Por medio de la siguiente función, se comprueba que el nombre de fármaco introducido está asociado a un identificador de la tabla drug.
+def Comprobar_farmaco_nombre():
+    Farmaco=input("\nPor favor, introduzca el nombre de su fármaco de interés (ejemplo: ASPIRIN): ")
+    #Primero, se hace una comprobación de que el nombre del fármaco existe. En realidad, no es necesaria (se podría comenzar por la Consulta2_SQL),
+    #pero se incluye en cumplimiento de la consideración general sobre realizar comprobaciones cuando sea posible.
+    Consulta_SQL = "SELECT drug_name FROM drug WHERE drug_name = %s;" 
+    Cursor.execute(Consulta_SQL, (Farmaco,))
+    Datos=Cursor.fetchall()
+    if len(Datos) != 0:
+        Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s;"
+        Cursor.execute(Consulta2_SQL, (Farmaco,))
+        Datos = Cursor.fetchall()
+        #Si para un nombre de fármaco aparece más de un identificador ChEMBL, se le da al usuario la opción de elegir cuál quiere incluir.
+        if len(Datos) > 1: 
+            print("Se han encontrado varios identificadores para el nombre de fármaco introducido:")
+            Numero_inicial=1
+            for Fila in Datos: 
+                print(f"{Numero_inicial}\t{Fila[0]}")
+                Numero_inicial+=1
+            Respuesta_usuario=input("Por favor, seleccione el número de uno de los identificadores mostrados: ")
+            #Se hace manejo de errores si el usuario no proporciona un número válido o introduce una cadena de texto.
+            try: 
+                Farmaco=Datos[int(Respuesta_usuario)-1][0]
+            except (ValueError, IndexError): 
+                print("Tiene que introducir una opción válida.")
+        else:
+            Farmaco = Datos[0][0]
+    #Si el nombre del fármaco no aparece en la base de datos, pero se han introducido por lo menos tres caracteres, el programa va a dar una
+    #segunda oportunidad al usuario, escogiendo nombres de fármacos que sean similares. Esto es especialmente útil en aquellos fármacos, como
+    #'penicillin', con varios nombres similares. Nuevamente, se hace manejo de errores en caso de que las respuestas introducidas por el usuario
+    #sean incorrectas. 
+    elif len(Farmaco) >= 3: 
+        Consulta3_SQL = "SELECT drug_name FROM drug WHERE drug_name LIKE %s;"
+        Farmaco = f"%{Farmaco}%"
+        Cursor.execute(Consulta3_SQL, (Farmaco,))
+        Datos=Cursor.fetchall()
+        if len(Datos) != 0:
+            print("\nLo sentimos, no hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?: ")
+            Numero_inicial = 1
+            for Fila in Datos:
+                print(f"{Numero_inicial}: {Fila[0]}")
+                Numero_inicial+=1
+            Respuesta2_usuario=input(f"\n¿Se encuentra su fármaco de interés en la lista? [En caso afirmativo, escriba \"Sí\"]: ")
+            if re.search("[Ss][IiÍí]", Respuesta2_usuario): 
+                try:
+                    Respuesta3_usuario=input("\nPor favor, seleccione el número de su fármaco de interés: ")
+                    Farmaco=Datos[int(Respuesta3_usuario)-1][0]
+                    print(f"Su elección ha sido: {Farmaco}.")
+                    Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s;"
+                    Cursor.execute(Consulta2_SQL, (Farmaco,))
+                    Datos = Cursor.fetchone()
+                    Farmaco = Datos[0]
+                except (ValueError, IndexError):
+                        print("Tiene que introducir una opción válida.")
+        #Si el nombre del fármaco que introduce el usuario excede los tres caracteres, pero no se encuentra ninguno en la base de datos con un patrón 
+        #similar, se hace saber al usuario que debe intentarlo de nuevo. 
+        else:
+            print(f"Lo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
+    #Si lo que introduce el usuario es una cadena de menos de tres caracteres, se hace saber al usuario que debe intentarlo de nuevo. 
+    else:
+            print(f"Lo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
+    return Farmaco
+
+###Por medio de la siguiente función, se comprueba que no existe la tupla id de fármaco - código del fármaco - vocabulario.
+def Comprobar_codigo_farmaco(ID_Farmaco, Vocabulario_farmaco): 
+    Codigo_farmaco=input("Por favor, introduzca el código identificador del fármaco. El dato introducido ha de ser un número: ")
+    try: 
+        int(Codigo_farmaco)
+        Consulta_SQL = "SELECT code_id FROM drug_has_code WHERE drug_id = %s AND code_id = %s AND vocabulary = %s;"
+        Cursor.execute(Consulta_SQL, (ID_Farmaco, Codigo_farmaco, Vocabulario_farmaco,))
+        Datos=Cursor.fetchall()
+        if len(Datos) != 0: 
+            Codigo_farmaco="fail"
+            print(f"\nLo sentimos, el código introducido ya está asociado a este fármaco para el vocabulario introducido.")
+    except ValueError:
+        Codigo_farmaco="fail" 
+        print("\nNecesita meter un número para avanzar. Inténtelo de nuevo.\n")  
+    return Codigo_farmaco
+
 def Inserciones():
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     print("Por medio de esta funcionalidad, usted puede ampliar las codificaciones de un fármaco ya existente en la base de datos.")
-    print("Usted debe introducir el nombre del fármaco, el nuevo código y el vocabulario del que proviene. Los nombres del fármaco y vocabulario han de existir ya en la base de datos.")
+    print("Usted debe introducir el nombre del fármaco, el nuevo código y el vocabulario del que proviene. El nombre del fármaco ha de existir ya en la base de datos.")
     print("El código introducido no puede estar ya asociado a ese fármaco para el vocabulario elegido.") 
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     ID_farmaco=Comprobar_farmaco_nombre()
     if re.search(r"^(CHEMBL)[0123456789]{1,}$", ID_farmaco):
         Vocabulario_farmaco=input("Por favor, introduzca el nombre del vocabulario para el que pertenece el código: ")
-        if Vocabulario_farmaco == "RxNorm" or Vocabulario_farmaco == "DrugBank":
-            Codigo_farmaco=Comprobar_codigo_farmaco(ID_farmaco, Vocabulario_farmaco)
-            if Codigo_farmaco != "fail":
-                Insercion_SQL="INSERT INTO drug_has_code(drug_id, code_id, vocabulary) VALUES (%s, %s, %s)" 
-                try: 
-                    Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
-                    Base.commit()
-                    print("\nLa inserción se ha realizado con éxito.")
-                except mysql.connector.Error:
-                    print("\nLo sentimos, no ha podido ejecutarse esta inserción")
-        else: 
-            print("\nLo sentimos. El vocabulario que ha introducido no se encuentra presente en la bases de datos. Por favor, inténtelo de nuevo.")
+        Codigo_farmaco=Comprobar_codigo_farmaco(ID_farmaco, Vocabulario_farmaco)
+        if Codigo_farmaco != "fail":
+            Insercion_SQL="INSERT INTO drug_has_code(drug_id, code_id, vocabulary) VALUES (%s, %s, %s);" 
+            try: 
+                Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
+                Base.commit()
+                print("\nLa inserción se ha realizado con éxito.")
+            except:
+                print("\nLo sentimos, no ha podido ejecutarse esta inserción")
     return
 
 #Apartado 8. Modificaciones 
@@ -787,28 +796,32 @@ def Modificaciones():
     Respuesta_usuario=input("Por favor, indique el valor umbral de asociación entre fármaco y efecto secundario: ")
     try: 
         Respuesta_usuario=float(Respuesta_usuario)
-        Consulta_SQL="""SELECT score FROM drug_phenotype_effect
-                        WHERE phenotype_type = "SIDE EFFECT" AND score < %s AND score != 0;"""
+        Consulta_SQL="""
+                     SELECT score FROM drug_phenotype_effect
+                     WHERE phenotype_type = "SIDE EFFECT" AND score < %s AND score != 0;
+                     """
         Cursor.execute(Consulta_SQL, (Respuesta_usuario,))
         Datos=Cursor.fetchall()
         if len(Datos) != 0: 
-            Respuesta2_usuario=input(f"\nSe ha encontrado un total de {len(Datos)} de asociaciones con un valor menor al especificado.\n¿Está seguro que quiere hacer la modificación? [sí|no]: ")
+            Respuesta2_usuario=input(f"\nSe ha encontrado un total de {len(Datos)} de asociaciones con un valor menor al especificado.\n¿Está seguro que quiere hacer la modificación? [En]caso afirmativo, escriba \"Sí\": ")
             if re.search("[Ss][IiÍí]", Respuesta2_usuario):
                 Modificacion_SQL="""UPDATE drug_phenotype_effect 
                                 SET score = 0 
                                 WHERE phenotype_type = "SIDE EFFECT" AND score < %s;"""
-                Cursor.execute(Modificacion_SQL, (Respuesta_usuario,))
-                Base.commit()
-                print("\nLa modificación se ha realizado con éxito.")
+                try:
+                    Cursor.execute(Modificacion_SQL, (Respuesta_usuario,))
+                    Base.commit()
+                    print("\nLa modificación se ha realizado con éxito.")
+                except:
+                    print("\nLo sentimos, no ha podido ejecutarse la modificación.")
         else: 
             print("\nNo hay asocaciones fármaco-efecto secundario con un score menor al introducido.")
-    except ValueError:
+    except:
                 print("Necesitas meter un número para avanzar. Inténtalo de nuevo.\n")  
     return
 
 ## Aquí definimos los menús con las funcionalidades
 def Funcionalidades_1(Ir_a):
-    #Cursor=Base.cursor()
     if Ir_a==1:
         Obtener_total_farmacos()
     elif Ir_a==2:
@@ -829,7 +842,6 @@ def Funcionalidades_1(Ir_a):
     Opciones(Ir_a)
 
 def Funcionalidades_2(Ir_a):
-    Cursor=Base.cursor()
     if Ir_a==1:
         Coger_informacion_farmaco_especifico(Buscar_farmaco())
     elif Ir_a==2:
@@ -844,7 +856,6 @@ def Funcionalidades_2(Ir_a):
     Opciones(Ir_a)
 
 def Funcionalidades_3(Ir_a):
-    Cursor=Base.cursor()
     if Ir_a==1:
        Coger_farmacos_para_enfermedad()
     elif Ir_a==2:
@@ -855,7 +866,6 @@ def Funcionalidades_3(Ir_a):
     Opciones(Ir_a)
 
 def Funcionalidades_4(Ir_a):
-    Cursor=Base.cursor()
     if Ir_a==1:
         print("\n♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣")
         Farmaco=Buscar_farmaco()
@@ -880,7 +890,6 @@ def Funcionalidades_4(Ir_a):
     Opciones(Ir_a)
 
 def Funcionalidades_5(Ir_a):
-    Cursor=Base.cursor()
     if Ir_a==1:
         Coger_primeras_dianas()
     elif Ir_a==2:
@@ -893,21 +902,18 @@ def Funcionalidades_5(Ir_a):
     Opciones(Ir_a)
 
 def Funcionalidades_6(Ir_a):
-    Cursor=Base.cursor()
     if Ir_a==1:
         Borrado()
     Ir_a=6
     Opciones(Ir_a)
 
 def Funcionalidades_7(Ir_a):
-    Cursor=Base.cursor()
     if Ir_a==1:
         Inserciones()
     Ir_a=7
     Opciones(Ir_a)
 
 def Funcionalidades_8(Ir_a):
-    Cursor=Base.cursor()
     if Ir_a==1:
         Modificaciones()
     Ir_a=8
