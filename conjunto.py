@@ -166,6 +166,98 @@ def Menu_8():
     Ir_a=Seleccion(Opcion_mayor, Opcion_menor)
     return Ir_a
 
+#A continuación, se definen una serie de funciones que servirán para alimentar otras funciones en los distintos subapartados. 
+
+#La función que se define a continuación comprueba que el identificador ChEMBL de un fármaco que se introduce por teclado es correcto. 
+def Buscar_farmaco():
+    Continuar=True
+    while Continuar:
+        Farmaco=input("Por favor, introduzca el identificador ChEMBL de su fármaco de interés (ejemplo: CHEMBL1000): ").replace("\t", "")
+        Farmaco=Farmaco.upper()
+        if re.search(r"^(CHEMBL)[0123456789]{1,}$", Farmaco):
+            Continuar=False
+        else:
+            print("Lo sentimos, la cadena introducida no es un identificador válido. Inténtelo de nuevo.\n")
+    
+    return Farmaco
+
+#La función que se define a continuación sirve para que el usuario tenga la opción de generar un archivo de texto 
+#con los resultados de la consulta. Viene definido por una serie de argumentos: 
+    #Numero_campos se refiere al total de campos que se devuelve en cada tupla o fila.  
+    #Encabezado contiene el encabezado para una determinada consulta. 
+    #Datos contiene las tuplas de la consulta tal y como se almacenan en una variable con fetchall o fetchone. 
+    #Nombre_archivo será el nombre que le demos al archivo de texto. 
+#Esta función se utiliza en aquellas consultas que devuelven más de una tupla (cuando el resultado es un listado).
+#Cada vez que el usuario acepte generar un archivo para un subapartado concreto, el anterior archivo, si es que 
+#existía, será reescrito totalmente. 
+def Obtener_archivo_texto(Numero_campos, Encabezado, Datos, Nombre_archivo): 
+    Respuesta_usuario=input("\n¿Quiere generar un archivo de texto con los resultados de la consulta? El archivo resultante se guardará en su directorio de trabajo\ny reemplazará la versión anterior en caso de que exista. [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
+    if re.search("[Ss][IiÍí]", Respuesta_usuario):
+        Archivo_salida=open(Nombre_archivo, "w")
+        #Se crea una lista donde se incluye el encabezado y las distintas filas con resultados. Esta lista se va a convertir
+        #a texto posteriormente con el método .writelines()
+        Tuplas_consulta=[]
+        Tuplas_consulta.append(Encabezado)
+        Numero_orden = 1
+        #Se van rellenando los distintos campos de cada fila por dos bucles for encadenados.  
+        for Fila in Datos:
+            Texto_salida = ""
+            for Numero in range(0,(Numero_campos)): 
+                if Numero == (Numero_campos-1):
+                     Texto_salida = Texto_salida + str(Numero_orden) + "\t" + Fila[Numero]  + "\n"
+                else: 
+                    Texto_salida = Texto_salida + str(Numero_orden) + "\t" + Fila[Numero] 
+            Tuplas_consulta.append(Texto_salida)
+            Numero_orden+=1
+        Archivo_salida.writelines(Tuplas_consulta)
+        Archivo_salida.close()
+
+#La función que se define a continuación sirve para buscar fármacos en caso de que la cadena introducida no corresponda
+#con ninguno de los presentes en la base de datos. Esto es útil porque en muchas ocasiones, el usuario no sabe cómo 
+#escribir de forma exacta el nombre de un fármaco tal cual aparece en la base de datos. Por tanto, si la cadena introducida
+#(el nombre del fármaco) supera los tres caracteres, por medio de la cláusula LIKE, se buscan aquellos fármacos que se parezcan
+#al patrón introducido. 
+def Busqueda_laxa_farmacos (Farmaco):
+    Sentencia_estricta = "SELECT drug_name, drug_id FROM drug WHERE drug_name = %s"
+    Cursor.execute(Sentencia_estricta, (Farmaco, ))
+    Datos=Cursor.fetchall()
+    #Si no aparecen resultados para el fármaco introducido, pero tiene más de tres caracteres, buscar fármacos con el patrón introducido. 
+    if len(Datos) == 0 and len(Farmaco) >= 3:
+        Sentencia_laxa = "SELECT drug_name, drug_id FROM drug WHERE drug_name LIKE %s"
+        Farmaco = f"%{Farmaco}%"
+        Cursor.execute(Sentencia_laxa, (Farmaco,))
+        Datos=Cursor.fetchall()
+        if len(Datos)!=0:
+            print("\nNo hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?:\n")
+            Numero_inicial=1
+            for Fila in Datos:
+                print(f"{Numero_inicial}\t{Fila[0]}")
+                Numero_inicial+=1
+            #Se pregunta al usuario si se encuentra en la lista proporcionada su fármaco de interés. 
+            Respuesta_usuario=input(f"\n¿Se encuentra su fármaco de interés en la lista? [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
+            if re.search("[Ss][IiÍí]", Respuesta_usuario): 
+                try:
+                    Respuesta3_usuario=input("Por favor, seleccione el número de su fármaco de interés: ").replace("\t", "")
+                    Farmaco=Datos[int(Respuesta3_usuario)-1][0]
+                    print(f"Su elección ha sido: {Farmaco}.") 
+                except (ValueError, IndexError): 
+                    print("\nPor favor, introduzca una opción válida.")
+                    Farmaco=None
+            #Si el usuario no encuentra ningún fármaco de interés entre las opciones mostradas, no es posible continuar con la consulta. 
+            else: 
+                print("Sentimos las molestias. Por favor, inténtelo de nuevo")
+                Farmaco=None
+        #Si no se encuentra ningún fármaco que incluya el patrón introducido, no es posible continuar con la consulta.
+        else: 
+            print("\nEl nombre del fármaco introducido no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
+            Farmaco=None
+    #Si la cadena introducida tiene menos de tres caracteres, no es posible continuar con la consulta. 
+    elif len(Datos) == 0 and len(Farmaco) < 3: 
+        print("\nEl nombre del fármaco introducido no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
+        Farmaco=None
+    return Farmaco
+
+
 #A continuación, definimos los comandos DML que se requieren en los distintos apartados de los submenús por medio de funciones. 
 
 # Apartado 1: Información general de la base de datos 
@@ -242,7 +334,7 @@ def Primeros_resultados_enfermedades ():
     Cursor.execute(Instancias_enfermedades)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    Encabezado="**\t\t\tDiez primeras instancias de enfermedades\t\t\t**\n\nN.º\tIdentificador\tNombre\n"
+    Encabezado="**\tDiez primeras instancias de enfermedades\t**\n\nN.º\tIdentificador\tNombre\n"
     print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
@@ -261,7 +353,7 @@ def Primeros_resultados_fenotipos():
     Cursor.execute(Instancias_fenotipos)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    Encabezado="**\t\t\tDiez primeras instancias de fenotipos\t\t\t**\n\nN.º\tIdentificador\tNombre\n"
+    Encabezado="**\tDiez primeras instancias de fenotipos\t**\n\nN.º\tIdentificador\tNombre\n"
     print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
@@ -281,7 +373,7 @@ def Primeros_resultados_dianas():
     Cursor.execute(Instancias_dianas)
     Datos = Cursor.fetchall()
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    Encabezado="**\t\t\tDiez primeras instancias de dianas\t\t\t**\n\nN.º\tIdentificador\tNombre\t\t\tTipo\t\t\tOrganismo\n"
+    Encabezado="**\t\t\tDiez primeras instancias de dianas\t\t\t**\n\nN.º\tIdentificador\tNombre\t\t\tTipo\t\tOrganismo\n"
     print(Encabezado)
     Numero_inicial=1
     for Fila in Datos:
@@ -290,80 +382,8 @@ def Primeros_resultados_dianas():
     Obtener_archivo_texto(4, Encabezado, Datos, "Consulta_1.8.txt")
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
-#La función que se define a continuación sirve para alimentar otras funciones. Comprueba que el identificador ChEMBL que se introduce de un fármaco es correcto. 
-def Buscar_farmaco():
-    Continuar=True
-    while Continuar:
-        Farmaco=input("Por favor, introduzca el identificador ChEMBL de su fármaco de interés (ejemplo: CHEMBL1000): ").replace("\t", "")
-        Farmaco=Farmaco.upper()
-        if re.search(r"^(CHEMBL)[0123456789]{1,}$", Farmaco):
-            Continuar=False
-        else:
-            print("Lo sentimos, la cadena introducida no es un identificador válido. Inténtelo de nuevo.\n")
-    
-    return Farmaco
-
-#La función que se define a continuación sirve para que el usuario tenga la opción de generar un archivo de texto 
-#con los resultados de la consulta. Viene definido por una serie de argumentos: 
-    #Numero_campos se refiere al total de campos que se devuelve en cada tupla.  
-    #Encabezado contiene el encabezado para una determinada consulta. 
-    #Datos contiene las tuplas de la consulta tal y como se almacenan en una variable con fetchall o fetchone. 
-    #Consulta contiene la consulta introducida por el usuario (input).
-    #Nombre_archivo será el nombre que le demos al archivo de texto. 
-def Obtener_archivo_texto(Numero_campos, Encabezado, Datos, Nombre_archivo): 
-    Respuesta_usuario=input("\n¿Quiere generar un archivo de texto con los resultados de la consulta? El archivo resultante se guardará en su directorio de trabajo\ny reemplazará la versión anterior en caso de que exista. [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
-    if re.search("[Ss][IiÍí]", Respuesta_usuario):
-        Archivo_salida=open(Nombre_archivo, "w")
-        #Archivo_salida.write(f"El usuario introdujo como dato a su consulta '{Consulta}'.")
-        Tuplas_consulta=[]
-        Tuplas_consulta.append(Encabezado)
-        Numero_orden = 1
-        for Fila in Datos:
-            Texto_salida = ""
-            for Numero in range(0,(Numero_campos)): 
-                if Numero == (Numero_campos-1):
-                     Texto_salida = Texto_salida + str(Numero_orden) + "\t" + Fila[Numero]  + "\n"
-                else: 
-                    Texto_salida = Texto_salida + str(Numero_orden) + "\t" + Fila[Numero] 
-            Tuplas_consulta.append(Texto_salida)
-            Numero_orden+=1
-        Archivo_salida.writelines(Tuplas_consulta)
-        Archivo_salida.close()
-
-def Busqueda_laxa_farmacos (Farmaco):
-    Sentencia_estricta = "SELECT drug_name, drug_id FROM drug WHERE drug_name = %s"
-    Cursor.execute(Sentencia_estricta, (Farmaco, ))
-    Datos=Cursor.fetchall()
-    if len(Datos) == 0 and len(Farmaco) >= 3:
-        Sentencia_laxa = "SELECT drug_name, drug_id FROM drug WHERE drug_name LIKE %s"
-        Farmaco = f"%{Farmaco}%"
-        Cursor.execute(Sentencia_laxa, (Farmaco,))
-        Datos=Cursor.fetchall()
-        if len(Datos)!=0:
-            print("\nNo hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?:\n")
-            Numero_inicial=1
-            for Fila in Datos:
-                print(f"{Numero_inicial}\t{Fila[0]}: {Fila[1]}")
-                Numero_inicial+=1
-            Respuesta_usuario=input(f"\n¿Se encuentra su fármaco de interés en la lista? [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
-            if re.search("[Ss][IiÍí]", Respuesta_usuario): 
-                try:
-                    Respuesta3_usuario=input("Por favor, seleccione el número de su fármaco de interés: ").replace("\t", "")
-                    Farmaco=Datos[int(Respuesta3_usuario)-1][0]
-                    print(f"Su elección ha sido: {Farmaco}.") 
-                except (ValueError, IndexError): 
-                    print("\nPor favor, introduzca una opción válida.")
-                    Farmaco=None
-        else: 
-            print("\nEl nombre del fármaco introducido no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
-            Farmaco=None
-    else: 
-        print("\nEl nombre del fármaco introducido no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
-        Farmaco=None
-    return Farmaco
-
 # Apartado 2: Información de los fármacos
-## Subapartado 2.1: Información sobre un fármaco
+## Subapartado 2.1: Información sobre un fármaco. 
 def Coger_informacion_farmaco_especifico(Farmaco): 
     Consulta_SQL = """
                    SELECT drug_name, molecular_type, chemical_structure, inchi_key FROM drug
@@ -373,30 +393,30 @@ def Coger_informacion_farmaco_especifico(Farmaco):
     Cursor.execute(Consulta_SQL, (Farmaco,))
     Datos=Cursor.fetchall()
     if len(Datos) != 0:
-        Encabezado=f"**\tInformación sobre el fármaco {Farmaco}\t**\nNombre\tTipo molecular\tEstructura química\tClave InChi"
+        Encabezado=f"**\tInformación sobre el fármaco {Farmaco.upper()}\t**\n\nNombre\tTipo molecular\tEstructura química\tClave InChi"
         print(Encabezado)
         print(f"{Datos[0][0]}\t{Datos[0][1]}\t{Datos[0][2]}\t{Datos[0][3]}")
-        Obtener_archivo_texto(3, Encabezado, Datos, "Consulta_2.1.txt")
     else:
         print("Este fármaco no está incluido en la base de datos.")
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
 
-## Subapartado 2.2: Sinónimos de un fármaco 
+## Subapartado 2.2: Sinónimos de un fármaco. 
 def Coger_sinonimos_farmaco_especifico():
     Farmaco=input("Por favor, indique el nombre del fármaco del cual quiere obtener sus sinónimos (ejemplo: ASPIRIN): ").replace("\t", "")
+    #Se comprueba que se haya introducido texto para continuar la consulta. 
     if len(Farmaco) != 0:
         Farmaco=Busqueda_laxa_farmacos(Farmaco)
+        #Se comprueba que el nombre del fármaco existe en la base de datos.
         if Farmaco != None: 
             Consulta_SQL = """
-                        SELECT synonymous_name FROM synonymous 
-                        WHERE drug_id IN (SELECT drug_id FROM drug WHERE drug_name = %s); 
+                           SELECT s.synonymous_name FROM synonymous AS s, drug AS d
+                           WHERE d.drug_name = %s AND s.drug_id = d.drug_id; 
                         """
-            #Obsérvese que para la subconsulta utilizamos un IN en lugar de un = porque en algunos casos, para un mismo nombre de fármaco, devuelve distintos drug_id (y daría un error)
             Cursor.execute(Consulta_SQL, (Farmaco, ))
             Datos=Cursor.fetchall()
             print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             if len(Datos) != 0:
-                Encabezado=f"Los sinónimos encontrados para el fármaco '{Farmaco.capitalize()}' son:\n"
+                Encabezado=f"Los sinónimos encontrados para el fármaco '{Farmaco.upper()}' son:\n"
                 print(Encabezado)
                 for Fila in Datos: 
                     print(Fila[0])
@@ -405,7 +425,7 @@ def Coger_sinonimos_farmaco_especifico():
                 print("No hay sinónimos para el fármaco proporcionado.")
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     else:
-        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.\n")
+        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.")
 
 ## Subapartado 2.3: Código ATC de un fármaco
 def Coger_codigos_ATC_farmaco_especifico(Farmaco):
@@ -422,13 +442,13 @@ def Coger_codigos_ATC_farmaco_especifico(Farmaco):
             Encabezado=f"Identificador ATC del fármaco seleccionado: {Datos[0][0]}"
             print(Encabezado)
         else: 
-            Encabezado="Identificadores ATC del fármaco seleccionado: "
+            Encabezado="Identificadores ATC del fármaco seleccionado:\n"
             print(Encabezado)
             Numero_inicial = 1
             for Fila in Datos: 
                 print(f"{Numero_inicial}: {Fila[0]}")
                 Numero_inicial+=1
-        Obtener_archivo_texto(1, Encabezado, Datos, "Consulta_2.3.txt")
+            Obtener_archivo_texto(1, Encabezado, Datos, "Consulta_2.3.txt")
     else: 
         print("No se ha encontrado ningún identificador ATC para el fármaco solicitado.")
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
@@ -447,7 +467,7 @@ def Farmaco_trata_enfermedades():
             Datos=Cursor.fetchall()
             print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             if len(Datos)!=0:
-                Encabezado=f"**\tEnfermedades tratadas por el fármaco {Farmaco}\t\t**\nN.º\tIdentificador\tNombre\n"
+                Encabezado=f"**\tEnfermedades tratadas por el fármaco {Farmaco.upper()}\t\t**\n\nN.º\tIdentificador\tNombre\n"
                 print(Encabezado)
                 Numero_inicial = 1
                 for Fila in Datos:
@@ -458,7 +478,7 @@ def Farmaco_trata_enfermedades():
                 print("Este fármaco no tiene asociada ninguna enfermedad tratada en la base de datos.")
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     else:
-        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.\n")
+        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.")
 
 ## Subapartado 2.5: Obtener identificadores del fármaco 
 def Obtener_identificadores_farmaco():
@@ -476,7 +496,7 @@ def Obtener_identificadores_farmaco():
                 print("    |    Este fármaco no se encuentra presente en la base de datos.    |    ")
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
     else:
-        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.\n")
+        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.")
 
 # Apartado 3. Información de las enfermedades 
 ## Subapartado 3.1: Fármacos para una enfermedad: 
@@ -750,14 +770,16 @@ def Borrado():
 
 ###Por medio de la siguiente función, se comprueba que el nombre de fármaco introducido está asociado a un identificador de la tabla drug.
 def Comprobar_farmaco_nombre():
-    Nombre_farmaco=input("\nPor favor, introduzca el nombre de su fármaco de interés (ejemplo: ASPIRIN): ").replace("\t", "")
-    if len(Nombre_farmaco) != 0:
-        Nombre_farmaco = Busqueda_laxa_farmacos(Nombre_farmaco)
-        if Nombre_farmaco != None:
+    Farmaco=input("\nPor favor, introduzca el nombre de su fármaco de interés (ejemplo: ASPIRIN): ").replace("\t", "")
+    if len(Farmaco) != 0:
         #Primero, se hace una comprobación de que el nombre del fármaco existe. En realidad, no es necesaria (se podría comenzar por la Consulta2_SQL),
         #pero se incluye en cumplimiento de la consideración general sobre realizar comprobaciones cuando sea posible.
-            Consulta_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s;"
-            Cursor.execute(Consulta_SQL, (Farmaco,))
+        Consulta_SQL = "SELECT drug_name FROM drug WHERE drug_name = %s;" 
+        Cursor.execute(Consulta_SQL, (Farmaco,))
+        Datos=Cursor.fetchall()
+        if len(Datos) != 0:
+            Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s;"
+            Cursor.execute(Consulta2_SQL, (Farmaco,))
             Datos = Cursor.fetchall()
             #Si para un nombre de fármaco aparece más de un identificador ChEMBL, se le da al usuario la opción de elegir cuál quiere incluir.
             if len(Datos) > 1: 
@@ -774,13 +796,42 @@ def Comprobar_farmaco_nombre():
                     print("Lo sentimos, necesita introducir una opción válida.")
             else:
                 Farmaco = Datos[0][0]
-    #Si el nombre del fármaco no aparece en la base de datos, pero se han introducido por lo menos tres caracteres, el programa va a dar una
-    #segunda oportunidad al usuario, escogiendo nombres de fármacos que sean similares. Esto es especialmente útil en aquellos fármacos, como
-    #'penicillin', con varios nombres similares. Nuevamente, se hace manejo de errores en caso de que las respuestas introducidas por el usuario
-    #sean incorrectas. 
-    #Si lo que introduce el usuario es una cadena de menos de tres caracteres, se hace saber al usuario que debe intentarlo de nuevo. 
+        #Si el nombre del fármaco no aparece en la base de datos, pero se han introducido por lo menos tres caracteres, el programa va a dar una
+        #segunda oportunidad al usuario, escogiendo nombres de fármacos que sean similares. Esto es especialmente útil en aquellos fármacos, como
+        #'penicillin', con varios nombres similares. Nuevamente, se hace manejo de errores en caso de que las respuestas introducidas por el usuario
+        #sean incorrectas. 
+        elif len(Farmaco) >= 3: 
+            Consulta3_SQL = "SELECT drug_name FROM drug WHERE drug_name LIKE %s;"
+            Farmaco = f"%{Farmaco}%"
+            Cursor.execute(Consulta3_SQL, (Farmaco,))
+            Datos=Cursor.fetchall()
+            if len(Datos) != 0:
+                print("\nLo sentimos, no hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?: ")
+                Numero_inicial = 1
+                for Fila in Datos:
+                    print(f"{Numero_inicial}: {Fila[0]}")
+                    Numero_inicial+=1
+                Respuesta2_usuario=input(f"\n¿Se encuentra su fármaco de interés en la lista? [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
+                if re.search("[Ss][IiÍí]", Respuesta2_usuario): 
+                    try:
+                        Respuesta3_usuario=input("\nPor favor, seleccione el número de su fármaco de interés: ").replace("\t", "")
+                        Farmaco=Datos[int(Respuesta3_usuario)-1][0]
+                        print(f"Su elección ha sido: {Farmaco}.")
+                        Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s;"
+                        Cursor.execute(Consulta2_SQL, (Farmaco,))
+                        Datos = Cursor.fetchone()
+                        Farmaco = Datos[0]
+                    except (ValueError, IndexError):
+                        print("Tiene que introducir una opción válida.")
+            #Si el nombre del fármaco que introduce el usuario excede los tres caracteres, pero no se encuentra ninguno en la base de datos con un patrón 
+            #similar, se hace saber al usuario que debe intentarlo de nuevo. 
+            else:
+                print(f"Lo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
+        #Si lo que introduce el usuario es una cadena de menos de tres caracteres, se hace saber al usuario que debe intentarlo de nuevo. 
+        else:
+            print(f"Lo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
     else: 
-        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.\n")
+        print("No ha introducido texto. Por favor, inténtelo de nuevo.")
     return Farmaco
 
 ###Por medio de la siguiente función, se comprueba que no existe la tupla id de fármaco - código del fármaco - vocabulario.
