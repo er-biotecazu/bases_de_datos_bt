@@ -234,7 +234,7 @@ def Busqueda_laxa_farmacos (Farmaco):
         Datos=Cursor.fetchall()
         #Si se han encontrado resultados, se muestran al usuario para que pueda elegir.
         if len(Datos) != 0:
-            print("\nNo hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?:\n")
+            print("No hemos encontrado el fármaco que busca. ¿Quizás se refería a alguno de los siguientes?:\n")
             Numero_inicial = 1
             #El uso del bucle permite la impresión limpia en pantalla de los resultados.
             for Fila in Datos:
@@ -260,7 +260,7 @@ def Busqueda_laxa_farmacos (Farmaco):
             Farmaco = None
     #Si la cadena introducida tiene menos de tres caracteres, no es posible continuar con la consulta.
     elif len(Datos) == 0 and len(Farmaco) < 3: 
-        print("\nEl nombre del fármaco introducido no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
+        print("El nombre del fármaco introducido no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
         Farmaco = None
     return Farmaco
 
@@ -282,7 +282,7 @@ def Busqueda_laxa_enfermedades (Enfermedad):
         Datos=Cursor.fetchall()
         #Si se han encontrado resultados, se muestran al usuario para que pueda elegir.
         if len(Datos) != 0:
-            print("\nNo hemos encontrado la enfermedad que busca. ¿Quizás se refería a alguna de las siguientes?:\n")
+            print("No hemos encontrado la enfermedad que busca. ¿Quizás se refería a alguna de las siguientes?:\n")
             Numero_inicial = 1
             #El uso del bucle permite la impresión limpia en pantalla de los resultados.
             for Fila in Datos:
@@ -308,7 +308,7 @@ def Busqueda_laxa_enfermedades (Enfermedad):
             Enfermedad = None
     #Si la cadena introducida tiene menos de tres caracteres, no es posible continuar con la consulta.
     elif len(Datos) == 0 and len(Enfermedad) < 3: 
-        print("\nEl nombre de la enfermedad introducido no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
+        print("El nombre de la enfermedad introducida no se encuentra en la base de datos. Por favor, inténtelo de nuevo.")
         Enfermedad = None
     return Enfermedad
         
@@ -477,7 +477,7 @@ def Coger_sinonimos_farmaco_especifico():
             Datos = Cursor.fetchall()
             #Si se han encontrado resultados (lista no vacía), se muestran al usuario.
             if len(Datos) != 0:
-                Encabezado=f"Los sinónimos encontrados para el fármaco '{Farmaco.upper()}' son:\n"
+                Encabezado=f"Los sinónimos encontrados para el fármaco {Farmaco.upper()} son:\n"
                 print(Encabezado)
                 #El uso del bucle permite la impresión limpia en pantalla de los resultados.
                 for Fila in Datos: 
@@ -589,7 +589,7 @@ def Coger_farmacos_para_enfermedad():
             Datos=Cursor.fetchall()
             #Si se han encontrado resultados (lista no vacía), se muestran al usuario.
             if len(Datos) != 0:
-                Encabezado = f"**\tFármacos para el tratamiento de la enfermedad '{Enfermedad}'\t**\nN.º\tIdentificador\tNombre\n"
+                Encabezado = f"**\tFármacos para el tratamiento de la enfermedad {Enfermedad.upper()}\t**\nN.º\tIdentificador\tNombre\n"
                 print(Encabezado)
                 Numero_inicial = 1
                 #El uso del bucle permite la impresión limpia en pantalla de los resultados.
@@ -598,7 +598,7 @@ def Coger_farmacos_para_enfermedad():
                     Numero_inicial+=1
                 Obtener_archivo_texto(2, Encabezado, Datos, "Consulta_3.1.txt")
             else:
-                print("Esta enfermedad no está incluida en la base de datos.")
+                print("Esta enfermedad no cuenta con fármacos para tratarla en la base de datos.")
         print("##############################################################################################\n")
     else:
         print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.\n")
@@ -611,9 +611,9 @@ def Mayor_asociacion():
                 """
     Cursor.execute(Sentencia)
     Resultado = Cursor.fetchone()   
-    print("\n##################################################################################################################################")
+    print("\n#######################################################################################################################################")
     print(f"La mayor asociación la presentan la enfermedad '{Resultado[1]}' y el fármaco '{Resultado[0]}' (la puntuación es de {Resultado[2]}).")
-    print("##################################################################################################################################\n")
+    print("#######################################################################################################################################\n")
 
 ## Subapartado 3.3: Buscar enfermedades asociadas a un término clave.
 def Buscar_termino_clave():
@@ -631,7 +631,7 @@ def Buscar_termino_clave():
         print("\n##############################################################################################################")
         #Si se han encontrado resultados (lista no vacía), se muestran al usuario.
         if len(Datos)!=0:
-            Encabezado = f"Enfermedades encontradas para el patrón '{Termino_clave}'. Se proporciona el nombre de la enfermedad y su código en cierto vocabulario:\n"
+            Encabezado = f"Enfermedades encontradas para el patrón {Termino_clave.upper()}. Se proporciona el nombre de la enfermedad y su código en cierto vocabulario:\n"
             print(Encabezado)
             #El uso del bucle permite la impresión limpia en pantalla de los resultados.
             for Fila in Datos:
@@ -654,7 +654,7 @@ def Coger_indicaciones_fenotipo(Farmaco):
     Datos=Cursor.fetchall()
     #Si se han encontrado resultados (lista no vacía), se muestran al usuario.
     if len(Datos) != 0: 
-        Encabezado=f"**\tIndicaciones del fármaco {Farmaco}\t**\nN.º\tID del fenotipo\tIndicado para\n"
+        Encabezado=f"**\tIndicaciones del fármaco {Farmaco.upper()}\t**\nN.º\tID del fenotipo\tIndicado para\n"
         print(Encabezado)
         Numero_inicial = 1
         #El uso del bucle permite la impresión limpia en pantalla de los resultados.
@@ -676,7 +676,7 @@ def Coger_efectos_secundarios_fenotipo(Farmaco):
     Datos=Cursor.fetchall()
     #Si se han encontrado resultados (lista no vacía), se muestran al usuario.
     if len(Datos) != 0: 
-        Encabezado = f"**\tEfectos secundarios del fármaco {Farmaco}\t**\nN.º\tID del fenotipo\tEfecto secundario\n"
+        Encabezado = f"**\tEfectos secundarios del fármaco {Farmaco.upper()}\t**\nN.º\tID del fenotipo\tEfecto secundario\n"
         print(Encabezado)
         Numero_inicial = 1
         #El uso del bucle permite la impresión limpia en pantalla de los resultados.
@@ -708,7 +708,7 @@ def Farmacos_provocan_efecto_secundario():
                             """
             Cursor.execute(Consulta2_SQL, (Efecto,))
             Datos = Cursor.fetchall()
-            Encabezado = f"**\tFármacos asociados con el efecto secundario '{Efecto}'\t**\nN.º\tIdentificador\tFármaco\n"
+            Encabezado = f"**\tFármacos asociados con el efecto secundario {Efecto.upper()}\t**\nN.º\tIdentificador\tFármaco\n"
             print(Encabezado)
             Numero_inicial = 1
             #El uso del bucle permite la impresión limpia en pantalla de los resultados.
@@ -739,7 +739,7 @@ def Coger_primeras_dianas():
         print("\n*******************************************************************************************")
         #Si se han encontrado resultados (lista no vacía), se muestran al usuario.
         if len(Datos) != 0: 
-            Encabezado = f"**\t20 primeras instancias de la diana '{Diana.upper()}'\t**\nN.º\tIdentificador\tDiana\n"
+            Encabezado = f"**\t20 primeras instancias de la diana {Diana.upper()}\t**\nN.º\tIdentificador\tDiana\n"
             print(Encabezado)
             Numero_inicial = 1
             #El uso del bucle permite la impresión limpia en pantalla de los resultados.
@@ -748,7 +748,7 @@ def Coger_primeras_dianas():
                 Numero_inicial+=1
             Obtener_archivo_texto(2, Encabezado, Datos, "Consulta_5.1.txt")
         else: 
-            print("No se ha encontrado ningún fármaco para la diana proporcionada.")
+            print("No se ha encontrado ninguna diana para el tipo proporcionado.")
         print("*******************************************************************************************\n")
     else:
         print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.\n")
@@ -814,7 +814,10 @@ def Dianas_organismo_concreto():
 ## Subapartado 5.4: Tipos de dianas que hay en la base de datos
 def Obtener_tipos_diana():
     print("A continuación, se le van a proporcionar los distintos tipos de dianas que aparecen en la base de datos:")
-    Consulta_SQL = "SELECT target_type FROM target GROUP BY target_type;"
+    Consulta_SQL = """
+                   SELECT target_type FROM target GROUP BY target_type
+                   ORDER BY target_type ASC
+                   """
     Cursor.execute(Consulta_SQL)
     Datos = Cursor.fetchall()
     print("\n*****************************************************************************************************")
@@ -825,12 +828,12 @@ def Obtener_tipos_diana():
 
 #Apartado 6: Borrado
 def Borrado():
-    print("Por medio de esta funcionalidad, se le van a mostrar las diez asociaciones entre fármaco y enfermedad con un score inferido más bajo.")
+    print("\nPor medio de esta funcionalidad, se le van a mostrar las diez asociaciones entre fármaco y enfermedad con un score inferido más bajo.")
     print("Usted dispone de la oportunidad de borrar alguna de esas asociaciones.")
     sql_query = """ 
                 SELECT dd.inferred_score, d.drug_name, dc.name FROM drug_disease AS dd, drug AS d, disease_code AS dc
                 WHERE d.drug_id = dd.drug_id AND dc.code_id = dd.code_id AND inferred_score IS NOT NULL
-                ORDER BY inferred_score ASC
+                ORDER BY inferred_score ASC, drug_name ASC, name ASC
                 LIMIT 10;
                 """
     Cursor.execute(sql_query)
@@ -840,7 +843,7 @@ def Borrado():
     Numero_inicial = 1
     #El uso del bucle permite la impresión limpia en pantalla de los resultados.
     for Fila in Datos: 
-        print(f"{Numero_inicial}\t{Fila[0]}\t\t{Fila[1]}\t{Fila[2]}")
+        print(f"{Numero_inicial}\t{Fila[0]}\t\t{Fila[1]}\t\t{Fila[2]}")
         Numero_inicial+=1
     Respuesta_usuario = input("\n¿Desea borrar alguna asociación de entre las mostradas? [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
     if re.search("[Ss][IiÍí]", Respuesta_usuario):
@@ -862,7 +865,7 @@ def Borrado():
                 Base.commit()
                 print("\nEl borrado se ha realizado con éxito.")
             else: 
-                print("\nUsted ha abandonado la funcionalidad de borrado")
+                print("\nUsted ha abandonado la funcionalidad de borrado.")
         except (ValueError, IndexError):
                 print("\nLo sentimos, necesita introducir una opción válida para proceder con el borrado.")
     else: 
@@ -919,7 +922,7 @@ def Comprobar_farmaco_nombre():
                 Respuesta2_usuario=input(f"\n¿Se encuentra su fármaco de interés en la lista? [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
                 if re.search("[Ss][IiÍí]", Respuesta2_usuario): 
                     try:
-                        Respuesta3_usuario=input("\nPor favor, seleccione el número de su fármaco de interés: ").replace("\t", "")
+                        Respuesta3_usuario=input("Por favor, seleccione el número de su fármaco de interés: ").replace("\t", "")
                         Farmaco=Datos[int(Respuesta3_usuario)-1][0]
                         print(f"Su elección ha sido: {Farmaco}.")
                         Consulta2_SQL = "SELECT drug_id FROM drug WHERE drug_name = %s;"
@@ -933,28 +936,26 @@ def Comprobar_farmaco_nombre():
             #Si el nombre del fármaco que introduce el usuario excede los tres caracteres, pero no se encuentra ninguno en la base de datos con un patrón 
             #similar, se hace saber al usuario que debe intentarlo de nuevo. 
             else:
-                print(f"Lo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
+                print(f"\nLo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
         #Si lo que introduce el usuario es una cadena de menos de tres caracteres, se hace saber al usuario que debe intentarlo de nuevo. 
         else:
-            print(f"Lo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
+            print(f"\nLo sentimos, este fármaco no está dentro de la base de datos. Por favor, vuelva a intentarlo de nuevo.")
     else: 
-        print("No ha introducido texto. Por favor, inténtelo de nuevo.")
+        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.")
     return Farmaco
 
 ###Por medio de la siguiente función, se comprueba que no existe la tupla id de fármaco - código del fármaco - vocabulario.
 def Comprobar_codigo_farmaco(ID_Farmaco, Vocabulario_farmaco): 
-    Codigo_farmaco = input("Por favor, introduzca el código identificador del fármaco. El dato introducido ha de ser un número: ").replace("\t", "")
-    try: 
-        int(Codigo_farmaco)
+    Codigo_farmaco = input("Por favor, introduzca el código identificador del fármaco: ").replace("\t", "")
+    if len(Codigo_farmaco) != 0: 
         Consulta_SQL = "SELECT code_id FROM drug_has_code WHERE drug_id = %s AND code_id = %s AND vocabulary = %s;"
         Cursor.execute(Consulta_SQL, (ID_Farmaco, Codigo_farmaco, Vocabulario_farmaco,))
         Datos=Cursor.fetchall()
         if len(Datos) != 0: 
             Codigo_farmaco = None
             print(f"\nLo sentimos, el código introducido ya está asociado a este fármaco para el vocabulario introducido.")
-    except ValueError:
-        Codigo_farmaco = None
-        print("\nNecesita meter un número para avanzar. Inténtelo de nuevo.")  
+    else: 
+        print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.")
     return Codigo_farmaco
 
 def Inserciones():
@@ -966,15 +967,18 @@ def Inserciones():
     ID_farmaco = Comprobar_farmaco_nombre()
     if re.search(r"^(CHEMBL)[0123456789]{1,}$", ID_farmaco):
         Vocabulario_farmaco = input("Por favor, introduzca el nombre del vocabulario para el que pertenece el código: ").replace("\t", "")
-        Codigo_farmaco = Comprobar_codigo_farmaco(ID_farmaco, Vocabulario_farmaco)
-        if Codigo_farmaco != None:
-            Insercion_SQL = "INSERT INTO drug_has_code(drug_id, code_id, vocabulary) VALUES (%s, %s, %s);" 
-            try: 
-                Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
-                Base.commit()
-                print("\nLa inserción se ha realizado con éxito.")
-            except:
-                print("\nLo sentimos, no ha podido ejecutarse esta inserción")
+        if len(Vocabulario_farmaco) != 0: 
+            Codigo_farmaco = Comprobar_codigo_farmaco(ID_farmaco, Vocabulario_farmaco)
+            if Codigo_farmaco != None:
+                Insercion_SQL = "INSERT INTO drug_has_code(drug_id, code_id, vocabulary) VALUES (%s, %s, %s);" 
+                try: 
+                    Cursor.execute(Insercion_SQL, (ID_farmaco, Codigo_farmaco, Vocabulario_farmaco,))
+                    Base.commit()
+                    print("\nLa inserción se ha realizado con éxito.")
+                except:
+                    print("\nLo sentimos, no ha podido ejecutarse esta inserción")
+        else:
+            print("\nNo ha introducido texto. Por favor, inténtelo de nuevo.")
 
 #Apartado 8. Modificaciones 
 def Modificaciones(): 
@@ -990,8 +994,9 @@ def Modificaciones():
                        """
         Cursor.execute(Consulta_SQL, (Respuesta_usuario,))
         Datos = Cursor.fetchall()
-        if len(Datos) != 0: 
-            Respuesta2_usuario = input(f"\nSe ha encontrado un total de {Datos[0][0]} de asociaciones con un valor menor al especificado.\n¿Está seguro que quiere hacer la modificación? [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
+        if Datos[0][0] > 0: 
+            print(f"\nSe ha encontrado un total de {Datos[0][0]} de asociaciones con un valor menor al especificado.")
+            Respuesta2_usuario=input(f"¿Está seguro que quiere hacer la modificación? [En caso afirmativo, escriba \"Sí\"]: ").replace("\t", "")
             if re.search("[Ss][IiÍí]", Respuesta2_usuario):
                 Modificacion_SQL = """
                                    UPDATE drug_phenotype_effect 
