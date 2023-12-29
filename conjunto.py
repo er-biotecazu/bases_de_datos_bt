@@ -223,7 +223,11 @@ def Busqueda_laxa_farmacos (Farmaco):
     Datos=Cursor.fetchall()
     #Si no aparecen resultados para el fármaco introducido, pero tiene más de tres caracteres, buscar fármacos con el patrón introducido. 
     if len(Datos) == 0 and len(Farmaco) >= 3:
-        Sentencia_laxa = "SELECT drug_name, drug_id FROM drug WHERE drug_name LIKE %s"
+        Sentencia_laxa = """
+                         SELECT drug_name, drug_id FROM drug 
+                         WHERE drug_name LIKE %s
+                         ORDER BY drug_name ASC; 
+                         """
         Farmaco = f"%{Farmaco}%"
         Cursor.execute(Sentencia_laxa, (Farmaco,))
         Datos=Cursor.fetchall()
@@ -542,7 +546,11 @@ def Buscar_termino_clave():
     #Con esta condición, nos aseguramos de que el usuario no ha introducido un "Enter".
     if len(Termino_clave) != 0:
         Termino_clave_patron=f"%{Termino_clave}%"
-        Sentencia="SELECT name, code_id, vocabulary FROM disease_code WHERE name LIKE %s"
+        Sentencia="""
+                  SELECT name, code_id, vocabulary FROM disease_code 
+                  WHERE name LIKE %s
+                  ORDER BY name ASC;
+                  """
         Cursor.execute(Sentencia, (Termino_clave_patron,))
         Datos=Cursor.fetchall()
         print("\n##############################################################################################################")
